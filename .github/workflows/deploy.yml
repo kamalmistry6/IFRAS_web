@@ -16,6 +16,10 @@ on:
     branches: [main]
   workflow_dispatch:   # the "Run workflow" button in the Actions tab
 
+# The workflow only needs to read the code; it deploys with the SSH key in the secrets.
+permissions:
+  contents: read
+
 # Two pushes in quick succession deploy one after the other, never at the same time.
 concurrency:
   group: deploy-web
@@ -56,8 +60,13 @@ jobs:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
           install -m 700 -d ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          # A key made on Windows has CRLF line endings, which Linux cannot read: remove them.
+          printf '%s\n' "$DEPLOY_SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          if ! ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null 2>&1; then
+            echo "::error::The DEPLOY_SSH_KEY secret is not a usable private key. Paste the whole private file (from BEGIN to END), made without a passphrase."
+            exit 1
+          fi
           ssh-keyscan -t ed25519 "$DEPLOY_HOST" >> ~/.ssh/known_hosts
 
       - name: Upload
