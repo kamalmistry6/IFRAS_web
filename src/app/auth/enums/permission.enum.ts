@@ -5,7 +5,7 @@ import { UserType } from './user-type.enum';
  * for a role name, so a rule changes in one place (ROLE_PERMISSIONS below).
  *
  * This is only for showing and hiding things. The backend enforces every
- * rule itself (see docs/FRONTEND_GUIDE.md, section 4).
+ * rule itself (see FRONTEND_GUIDE.md in the IFRAS_api repository (docs/), section 4).
  */
 export enum AppPermission {
   // Academic structure
@@ -44,7 +44,7 @@ export enum AppPermission {
 
 const P = AppPermission;
 
-/** The permissions of each user type. Mirrors docs/FRONTEND_GUIDE.md, section 4. */
+/** The permissions of each user type. Mirrors FRONTEND_GUIDE.md in the IFRAS_api repository (docs/), section 4. */
 export const ROLE_PERMISSIONS: Record<UserType, readonly AppPermission[]> = {
   [UserType.SUPER_ADMIN]: [
     P.ACADEMICS_VIEW,

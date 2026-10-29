@@ -9,9 +9,9 @@ import { TakeAttendanceComponent } from '../attendance/take-attendance/take-atte
 import { TodayComponent } from './today/today.component';
 
 /**
- * The teacher's area: today's lectures (T1), taking attendance (T2) and the history of sessions (T4).
- * The other screens (docs/FRONTEND_PAGES.md, T5 and T6) are added here one at a time:
- * create the component, declare it, add a route.
+ * The teacher's area: today's lectures (T1) and the timetable (T5). Taking attendance (T2) and the
+ * history of sessions (T4) are in the shared attendance module, because administrators use them too.
+ * The profile (T6) and the dashboard are still to build: create the component, declare it, add a route.
  */
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'today' },

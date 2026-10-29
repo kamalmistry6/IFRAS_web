@@ -20,8 +20,8 @@ export interface NavItem {
  * buttons use (roles and permissions). The routes themselves live in each
  * feature module; the menu only decides what to SHOW.
  *
- * Only each area's landing page is listed for now. The rest of the screens
- * are in docs/FRONTEND_PAGES.md.
+ * Every screen that is built is listed. The screens still to build are in
+ * docs/FRONTEND_PAGES.md.
  */
 export const NAV_ITEMS: NavItem[] = [
   {

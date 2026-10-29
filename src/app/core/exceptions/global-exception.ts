@@ -13,7 +13,7 @@ const IGNORED_KEYS = new Set(['detail', 'code', 'messages']);
  * interceptor builds it from the HttpErrorResponse, so components never parse
  * raw error bodies.
  *
- * The backend reports problems in these shapes (see docs/FRONTEND_GUIDE.md 3.2):
+ * The backend reports problems in these shapes (see FRONTEND_GUIDE.md in the IFRAS_api repository (docs/) 3.2):
  *   {"roll_number": ["..."]}              a field error        -> fieldErrors
  *   {"non_field_errors": ["..."]}         a rule across fields -> generalErrors
  *   {"detail": "...", "code": "..."}      401 / 403 / 404 / 409 -> detail, code

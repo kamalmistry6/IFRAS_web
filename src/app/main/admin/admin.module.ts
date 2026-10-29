@@ -19,9 +19,9 @@ import { TimetableManagerComponent } from './timetable-manager/timetable-manager
 
 /**
  * The administrators' area (college and platform administrators share it).
- * The landing page, academic setup (A10), sessions (A9), students and enrollments (A2 to A5), teachers (A6), subject assignments (A7)
- * and the timetable manager (A8). Every admin screen of docs/FRONTEND_PAGES.md is here except the dashboard are added here one at a time, each
- * route asking for its permission through the AuthGuard:
+ * Every admin screen of docs/FRONTEND_PAGES.md is here (A2 to A10) except the dashboard, which
+ * is still a "coming soon" page. A new screen is added the same way: create the component, declare
+ * it, add a route that asks for its permission through the AuthGuard:
  *
  *   { path: 'students', component: StudentsComponent, canActivate: [AuthGuard],
  *     data: { permissions: [AppPermission.STUDENTS_MANAGE] } }
