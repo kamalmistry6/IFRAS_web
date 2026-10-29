@@ -1,0 +1,221 @@
+@use 'mixins' as m;
+
+// Forms, written as plain classes.
+//
+// A text field with an icon (the login style):
+//
+//   <div class="form-field">
+//     <label class="form-label" for="username">Username</label>
+//     <div class="input-group">
+//       <span class="icon icon-user input-icon"></span>
+//       <input id="username" type="text" formControlName="username" />
+//     </div>
+//     <p class="form-error" *ngIf="form.controls['username'] | formError as error">{{ error }}</p>
+//   </div>
+//
+// Add <button class="input-action"> inside .input-group for a button at the
+// right end (show password). The box turns red by itself when the control is
+// invalid and touched (Angular's ng-invalid / ng-touched classes).
+//
+// A plain field without an icon: <input class="input">, <select class="select">,
+// <textarea class="textarea">.
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-label {
+  font-size: var(--text-sm);
+  font-weight: 650;
+  color: var(--color-text);
+}
+
+.form-error {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-danger-text);
+}
+
+.form-hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+// ---- A box with an icon ------------------------------------------------------
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  padding: 0 var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
+
+  &:hover {
+    border-color: var(--color-text-subtle);
+  }
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+
+  // Invalid and touched (also set by applyServerErrors for API errors).
+  &:has(.ng-invalid.ng-touched) {
+    border-color: var(--color-danger);
+
+    &:focus-within {
+      box-shadow: 0 0 0 3px var(--color-danger-soft);
+    }
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.25rem;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--color-text);
+
+    &::placeholder {
+      color: var(--color-text-subtle);
+    }
+  }
+}
+
+.input-icon {
+  color: var(--color-text-subtle);
+}
+
+.input-action {
+  display: grid;
+  place-items: center;
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-subtle);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text);
+  }
+}
+
+// ---- Plain fields -------------------------------------------------------------
+
+.input,
+.select,
+.textarea {
+  display: block;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
+
+  &::placeholder {
+    color: var(--color-text-subtle);
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-text-subtle);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+
+  &:disabled {
+    background: var(--color-surface-muted);
+    color: var(--color-text-subtle);
+    cursor: not-allowed;
+  }
+
+  &.ng-invalid.ng-touched {
+    border-color: var(--color-danger);
+
+    &:focus {
+      box-shadow: 0 0 0 3px var(--color-danger-soft);
+    }
+  }
+}
+
+.textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.select {
+  appearance: none;
+  padding-right: var(--space-6);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m1 1 5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+}
+
+// ---- Check boxes ---------------------------------------------------------------
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--color-primary);
+  }
+}
+
+// Browser autofill paints inputs light blue. Cover it with the surface colour
+// (the long transition stops Chrome from ever showing its own background).
+.input-group input,
+.input {
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--color-text);
+    caret-color: var(--color-text);
+    box-shadow: 0 0 0 100rem var(--color-surface) inset;
+    transition: background-color 600000s 0s;
+  }
+}
+
+// ---- Time select ---------------------------------------------------------------------
+//   <div class="time-select" role="group" aria-label="Starts">
+//     <select class="select">...hours...</select>
+//     <select class="select">...minutes...</select>
+//     <select class="select">AM / PM</select>
+//   </div>
+// Three drop-downs in a row instead of the browser's own time picker.
+
+.time-select {
+  display: flex;
+  gap: var(--space-2);
+
+  .select {
+    flex: 1;
+    min-width: 0;
+  }
+}

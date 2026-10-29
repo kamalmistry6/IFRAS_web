@@ -1,0 +1,23 @@
+// The login page is built from global classes (src/styles): .auth-page, .auth-card,
+// .form-field, .input-group, .btn ... Only what is specific to this page is here.
+
+// "Keep me signed in" on the left, "Forgot password?" on the right.
+.options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

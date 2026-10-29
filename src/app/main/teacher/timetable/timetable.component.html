@@ -1,0 +1,89 @@
+<header class="page-banner">
+  <div>
+    <h1>My timetable</h1>
+    <p>
+      @if (loaded) {
+        {{ weeklyCount }} {{ weeklyCount === 1 ? 'lecture' : 'lectures' }} a week. To change it, ask
+        your administrator.
+      } @else {
+        Your weekly lectures.
+      }
+    </p>
+  </div>
+
+  @if (hiddenCount > 0) {
+    <div class="chips">
+      <button
+        type="button"
+        class="chip"
+        [class.active]="showAll"
+        (click)="showAll = !showAll"
+        [attr.aria-pressed]="showAll"
+      >
+        Show ended and upcoming <span>{{ hiddenCount }}</span>
+      </button>
+    </div>
+  }
+</header>
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="load()">Try again</button>
+  </div>
+}
+
+@if (loaded && slots.length === 0 && !error) {
+  <section class="card">
+    <div class="empty-state">
+      <span class="icon icon-clock icon-xl"></span>
+      <h3>No timetable yet</h3>
+      <p>Your administrator has not added any lectures to your timetable.</p>
+    </div>
+  </section>
+}
+
+@if (loaded && slots.length > 0) {
+  <div class="week">
+    @for (day of days; track day.number) {
+      <section class="day" [class.today]="day.number === todayNumber">
+        <h3>
+          {{ day.name }}
+          @if (day.number === todayNumber) {
+            <span class="badge badge-primary">Today</span>
+          }
+        </h3>
+
+        @for (slot of day.slots; track slot.public_id) {
+          <article class="slot" [class.faded]="period(slot) !== 'current'">
+            <span class="time">
+              {{ formatTime(slot.start_time) }} - {{ formatTime(slot.end_time) }}
+            </span>
+            <strong>{{ slot.subject_name }}</strong>
+            <small class="text-muted">
+              {{ slot.subject_code }}
+              @if (slot.room) {
+                · Room {{ slot.room }}
+              }
+            </small>
+            <small class="text-subtle">
+              @switch (period(slot)) {
+                @case ('upcoming') {
+                  Starts {{ slot.valid_from | date: 'd MMM y' }}
+                }
+                @case ('ended') {
+                  Ended {{ slot.valid_to | date: 'd MMM y' }}
+                }
+                @default {
+                  Until {{ slot.valid_to | date: 'd MMM y' }}
+                }
+              }
+            </small>
+          </article>
+        } @empty {
+          <p class="none">No lectures</p>
+        }
+      </section>
+    }
+  </div>
+}

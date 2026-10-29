@@ -1,0 +1,128 @@
+// Buttons. Put a class on a native <button> or <a>:
+//
+//   <button class="btn btn-primary">Save</button>
+//   <button class="btn btn-secondary btn-sm">Cancel</button>
+//   <button class="btn btn-primary btn-block" [class.is-loading]="saving" [disabled]="saving">Sign In</button>
+//   <a class="btn btn-ghost" routerLink="/">Home</a>
+//
+// Variants: btn-primary, btn-secondary, btn-danger, btn-ghost.
+// Sizes: btn-sm, (default), btn-lg.  btn-block makes it full width.
+// `is-loading` shows a spinner; also set [disabled] so it cannot be clicked twice.
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  padding: 0 var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--transition),
+    border-color var(--transition),
+    opacity var(--transition);
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  &:disabled,
+  &.is-loading {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  &.is-loading {
+    pointer-events: none;
+
+    &::before {
+      content: '';
+      width: 1em;
+      height: 1em;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: btn-spin 0.7s linear infinite;
+    }
+  }
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+
+  &:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+  }
+}
+
+.btn-secondary {
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+
+  &:hover:not(:disabled) {
+    background: var(--color-surface-muted);
+  }
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: var(--color-danger-hover);
+  }
+}
+
+.btn-ghost {
+  color: var(--color-primary);
+
+  &:hover:not(:disabled) {
+    background: var(--color-primary-soft);
+  }
+}
+
+.btn-sm {
+  min-height: 2rem;
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.btn-lg {
+  min-height: 2.75rem;
+  padding: 0 var(--space-6);
+  font-size: var(--text-md);
+}
+
+.btn-block {
+  display: flex;
+  width: 100%;
+}
+
+// A square button that holds only an icon (menu, close, theme switch).
+.btn-icon {
+  width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0;
+  color: var(--color-text-muted);
+
+  &:hover:not(:disabled) {
+    background: var(--color-surface-muted);
+    color: var(--color-text);
+  }
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,246 @@
+<section class="card filters" [formGroup]="filters">
+  @if (searchable) {
+    <div class="input-group search">
+      <span class="icon icon-search input-icon"></span>
+      <input
+        type="search"
+        formControlName="search"
+        [placeholder]="config.searchPlaceholder!"
+        [attr.aria-label]="'Search ' + config.label.toLowerCase()"
+      />
+    </div>
+  }
+
+  @for (item of visibleFilters; track item.name) {
+    <div class="form-field">
+      <label class="form-label" [for]="'filter-' + item.name">{{ item.label }}</label>
+      <select class="select" [id]="'filter-' + item.name" [formControlName]="item.name">
+        <option value="">All</option>
+        @for (option of filterOptions(item); track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </div>
+  }
+
+  @if (hasFilters) {
+    <button class="btn btn-ghost" type="button" (click)="clearFilters()">Clear</button>
+  }
+
+  <span class="spacer"></span>
+
+  @if (canWrite) {
+    <button class="btn btn-primary" type="button" (click)="openAdd()">
+      <span class="icon icon-plus icon-sm"></span>
+      Add {{ config.singular }}
+    </button>
+  }
+</section>
+
+@if (!canWrite) {
+  <p class="readonly-note">
+    Only a platform administrator can change {{ config.label.toLowerCase() }}. You can view them
+    here.
+  </p>
+}
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="retry()">Try again</button>
+  </div>
+}
+
+<section class="card list" [class.loading]="loading">
+  @if (loaded && rows.length === 0 && !error) {
+    <div class="empty-state">
+      <span class="icon icon-layers icon-xl"></span>
+      <h3>No {{ config.label.toLowerCase() }} found</h3>
+      <p>{{ hasFilters ? 'Try another search or clear the filters.' : config.emptyHint }}</p>
+      @if (!hasFilters && canWrite) {
+        <button class="btn btn-primary" type="button" (click)="openAdd()">
+          Add {{ config.singular }}
+        </button>
+      }
+    </div>
+  } @else {
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            @for (column of config.columns; track column.header) {
+              <th>{{ column.header }}</th>
+            }
+            @if (showStatus) {
+              <th>Status</th>
+            }
+            @if (canWrite) {
+              <th></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows; track row.public_id) {
+            <tr [class.inactive]="!row.is_active">
+              @for (column of config.columns; track column.header) {
+                <td>
+                  @if (column.kind === 'badge' && column.value(row) !== '-') {
+                    <span class="badge" [ngClass]="column.badge ? column.badge(row) : ''">
+                      {{ column.value(row) }}
+                    </span>
+                  } @else {
+                    {{ column.value(row) }}
+                  }
+                </td>
+              }
+              @if (showStatus) {
+                <td>
+                  <span class="badge" [ngClass]="row.is_active ? 'badge-success' : 'badge-warning'">
+                    {{ row.is_active ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+              }
+              @if (canWrite) {
+                <td class="actions">
+                  <button class="btn btn-secondary btn-sm" type="button" (click)="openEdit(row)">
+                    Edit
+                  </button>
+                  <button class="btn btn-ghost btn-sm" type="button" (click)="toggleActive(row)">
+                    {{ row.is_active ? 'Deactivate' : 'Activate' }}
+                  </button>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (count > 0) {
+      @let r = range;
+      <div class="pager">
+        <span>Showing {{ r.from }}-{{ r.to }} of {{ count }}</span>
+        <span class="spacer"></span>
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          [disabled]="page <= 1 || loading"
+          (click)="goTo(page - 1)"
+        >
+          Previous
+        </button>
+        <span>Page {{ page }} of {{ r.totalPages }}</span>
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          [disabled]="page >= r.totalPages || loading"
+          (click)="goTo(page + 1)"
+        >
+          Next
+        </button>
+      </div>
+    }
+  }
+</section>
+
+@if (showForm) {
+  <div class="modal-backdrop" (click)="closeForm()">
+    <form
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="resource-title"
+      [formGroup]="form"
+      (click)="$event.stopPropagation()"
+      (ngSubmit)="save()"
+      novalidate
+    >
+      <div class="modal-header">
+        <h3 id="resource-title">
+          {{ editing ? 'Edit ' + config.singular : 'Add ' + config.singular }}
+        </h3>
+        <button class="btn btn-ghost btn-sm" type="button" (click)="closeForm()">Close</button>
+      </div>
+
+      <div class="modal-body">
+        @for (message of formErrors; track message) {
+          <div class="alert alert-danger" role="alert">{{ message }}</div>
+        }
+
+        @if (editing) {
+          <p class="text-subtle fixed-note">
+            What this belongs to cannot be changed. To move it, add a new one and deactivate this
+            one.
+          </p>
+        }
+
+        @for (field of fields; track field.name) {
+          <div class="form-field">
+            @if (isFixed(field)) {
+              <span class="form-label">{{ field.label }}</span>
+              <div class="fixed">{{ fixedText(field) }}</div>
+            } @else if (field.kind === 'checkbox') {
+              <label class="check">
+                <input type="checkbox" [formControlName]="field.name" />
+                {{ field.label }}
+              </label>
+              @if (note(field)) {
+                <p class="form-hint">{{ note(field) }}</p>
+              }
+            } @else {
+              <label class="form-label" [for]="'f-' + field.name">{{ field.label }}</label>
+
+              @switch (field.kind) {
+                @case ('textarea') {
+                  <textarea
+                    class="textarea"
+                    rows="2"
+                    [id]="'f-' + field.name"
+                    [formControlName]="field.name"
+                  ></textarea>
+                }
+                @case ('select') {
+                  <select class="select" [id]="'f-' + field.name" [formControlName]="field.name">
+                    <option [ngValue]="null" disabled>Choose</option>
+                    @for (option of fieldOptions[field.name]; track option.value) {
+                      <option [ngValue]="option.value">{{ option.label }}</option>
+                    }
+                  </select>
+                }
+                @default {
+                  <input
+                    class="input"
+                    [id]="'f-' + field.name"
+                    [type]="field.kind"
+                    [attr.min]="field.min ?? null"
+                    [attr.max]="field.max ?? null"
+                    [placeholder]="field.placeholder ?? ''"
+                    [formControlName]="field.name"
+                  />
+                }
+              }
+
+              @if (form.controls[field.name] | formError; as error) {
+                <p class="form-error">{{ error }}</p>
+              } @else if (field.hint) {
+                <p class="form-hint">{{ field.hint }}</p>
+              }
+            }
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" (click)="closeForm()">Cancel</button>
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [class.is-loading]="saving"
+          [disabled]="saving"
+        >
+          {{ editing ? 'Save changes' : 'Add ' + config.singular }}
+        </button>
+      </div>
+    </form>
+  </div>
+}

@@ -1,0 +1,28 @@
+<dialog
+  #dialog
+  aria-labelledby="confirm-title"
+  (cancel)="onCancel()"
+  (click)="onBackdropClick($event)"
+>
+  @if (request; as current) {
+    <div class="content">
+      <h2 id="confirm-title">{{ current.options.title }}</h2>
+      @if (current.options.message) {
+        <p>{{ current.options.message }}</p>
+      }
+      <div class="actions">
+        <button class="btn btn-secondary" type="button" (click)="answer(false)">
+          {{ current.options.cancelText || 'Cancel' }}
+        </button>
+        <button
+          class="btn"
+          type="button"
+          [ngClass]="current.options.danger ? 'btn-danger' : 'btn-primary'"
+          (click)="answer(true)"
+        >
+          {{ current.options.confirmText || 'Confirm' }}
+        </button>
+      </div>
+    </div>
+  }
+</dialog>

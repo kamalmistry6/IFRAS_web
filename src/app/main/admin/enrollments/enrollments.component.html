@@ -1,0 +1,180 @@
+<header class="page-banner">
+  <div>
+    <h1>Enrollments</h1>
+    <p>
+      Which students are in which program, year and roll number. Only enrolled students appear in
+      attendance.
+    </p>
+  </div>
+
+  <button class="btn btn-secondary" type="button" (click)="openEnrol()">
+    <span class="icon icon-plus icon-sm"></span>
+    Enrol student
+  </button>
+</header>
+
+<section class="card filters" [formGroup]="filters">
+  <div class="input-group search">
+    <span class="icon icon-search input-icon"></span>
+    <input
+      type="search"
+      formControlName="search"
+      placeholder="Search student name, username or roll number"
+      aria-label="Search enrollments"
+    />
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="year-filter">Academic year</label>
+    <select id="year-filter" class="select" formControlName="year">
+      <option value="">All years</option>
+      @for (year of years; track year.id) {
+        <option [value]="year.id">{{ year.name }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="program-filter">Program</label>
+    <select id="program-filter" class="select" formControlName="program">
+      <option value="">All programs</option>
+      @for (program of programs; track program.id) {
+        <option [value]="program.id">{{ program.name }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="form-field narrow">
+    <label class="form-label" for="study-filter">Year of study</label>
+    <select id="study-filter" class="select" formControlName="yearOfStudy">
+      <option value="">Any</option>
+      @for (year of yearOptions; track year) {
+        <option [value]="year">Year {{ year }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="form-field narrow">
+    <label class="form-label" for="status-filter">Status</label>
+    <select id="status-filter" class="select" formControlName="status">
+      <option value="">Any</option>
+      @for (status of statuses; track status.value) {
+        <option [value]="status.value">{{ status.label }}</option>
+      }
+    </select>
+  </div>
+
+  @if (hasFilters) {
+    <button class="btn btn-ghost" type="button" (click)="clearFilters()">Clear</button>
+  }
+</section>
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="retry()">Try again</button>
+  </div>
+}
+
+<section class="card list" [class.loading]="loading">
+  @if (loaded && enrollments.length === 0 && !error) {
+    <div class="empty-state">
+      <span class="icon icon-layers icon-xl"></span>
+      <h3>No enrollments found</h3>
+      <p>
+        {{
+          hasFilters
+            ? 'Try another search or clear the filters.'
+            : 'Enrol a student to get started.'
+        }}
+      </p>
+      @if (!hasFilters) {
+        <button class="btn btn-primary" type="button" (click)="openEnrol()">Enrol student</button>
+      }
+    </div>
+  } @else {
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Academic year</th>
+            <th>Program</th>
+            <th>Year</th>
+            <th>Roll number</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of enrollments; track item.public_id) {
+            <tr class="clickable" (click)="openEdit(item)">
+              <td>
+                <a
+                  class="student"
+                  [routerLink]="['/admin/students', item.student_public_id]"
+                  (click)="$event.stopPropagation()"
+                >
+                  {{ item.student_name }}
+                </a>
+              </td>
+              <td>
+                <span class="badge badge-primary">{{ item.academic_year_name }}</span>
+              </td>
+              <td>{{ item.program_name }}</td>
+              <td class="nowrap">Year {{ item.year_of_study }}</td>
+              <td>{{ item.roll_number }}</td>
+              <td>
+                <span class="badge" [ngClass]="badge[item.status]">
+                  {{ statusLabel[item.status] }}
+                </span>
+              </td>
+              <td class="actions">
+                <button
+                  class="btn btn-secondary btn-sm"
+                  type="button"
+                  (click)="openEdit(item); $event.stopPropagation()"
+                >
+                  Edit
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (count > 0) {
+      @let r = range;
+      <div class="pager">
+        <span>Showing {{ r.from }}-{{ r.to }} of {{ count }}</span>
+        <span class="spacer"></span>
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          [disabled]="page <= 1 || loading"
+          (click)="goTo(page - 1)"
+        >
+          Previous
+        </button>
+        <span>Page {{ page }} of {{ r.totalPages }}</span>
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          [disabled]="page >= r.totalPages || loading"
+          (click)="goTo(page + 1)"
+        >
+          Next
+        </button>
+      </div>
+    }
+  }
+</section>
+
+@if (showDialog) {
+  <app-enrollment-dialog
+    [enrollment]="editing"
+    (saved)="saved()"
+    (closed)="closeDialog()"
+  ></app-enrollment-dialog>
+}

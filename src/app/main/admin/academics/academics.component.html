@@ -1,0 +1,33 @@
+<header class="page-banner">
+  <div>
+    <h1>Academic setup</h1>
+    <p>
+      The structure everything else depends on. Set it up in this order: departments, programs,
+      semesters, subjects, then offer subjects in an academic year.
+    </p>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Academic setup">
+  @for (tab of tabs; track tab.key) {
+    <button
+      type="button"
+      class="tab"
+      [class.active]="tab === current"
+      [attr.aria-current]="tab === current ? 'page' : null"
+      (click)="choose(tab)"
+    >
+      {{ tab.label }}
+    </button>
+  }
+</nav>
+
+<!-- A new table for each tab, so filters and pages start fresh. -->
+@for (tab of [current]; track tab.key) {
+  <app-resource-table
+    [config]="tab"
+    [platform]="platform"
+    [canWrite]="canWrite(tab)"
+    [collegeId]="collegeId"
+  ></app-resource-table>
+}

@@ -1,0 +1,48 @@
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+
+  .form-field {
+    flex: 0 1 20rem;
+  }
+
+  .inactive-toggle {
+    padding-bottom: var(--space-2);
+  }
+}
+
+.alert {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+// Dim the grid while a new filter loads, instead of flashing it empty.
+.week {
+  transition: opacity var(--transition);
+
+  &.loading {
+    opacity: 0.6;
+  }
+}
+
+// The weekly grid (.week, .day, .slot) is global: styles/_timetable.scss.
+
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+// The teacher and subject of the slot being edited: shown, not editable.
+.fixed {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}

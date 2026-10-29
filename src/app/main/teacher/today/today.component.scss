@@ -1,0 +1,80 @@
+@use 'styles/mixins' as m;
+
+.date {
+  width: auto;
+}
+
+.alert {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+// Cards in a grid: as many columns as fit, each at least 22rem wide.
+.lectures {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: var(--space-4);
+}
+
+.lecture {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.time {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-weight: 650;
+}
+
+.what {
+  min-width: 0;
+
+  h3,
+  p {
+    margin: 0;
+  }
+}
+
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+// Why the Start button is disabled ("You can start this lecture from 9:50 AM").
+.start-note {
+  margin: 0;
+  color: var(--color-text-subtle);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+// The button sits at the bottom of every card, so cards of different heights still line up.
+.lecture .btn {
+  margin-top: auto;
+}
+
+.hint {
+  margin: 0;
+}
+
+.times {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}

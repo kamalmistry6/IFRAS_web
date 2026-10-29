@@ -1,0 +1,289 @@
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="load()">Try again</button>
+  </div>
+}
+
+@if (session; as s) {
+  @let c = counts;
+
+  <header class="page-banner">
+    <div class="intro">
+      <a class="back" [routerLink]="backLink" (click)="goBack($event)">
+        <span class="icon icon-chevron-left icon-sm"></span>
+        Back
+      </a>
+      <div class="title">
+        <h1>{{ s.subject_name }}</h1>
+        <span class="badge" [ngClass]="stateBadge[s.status]">{{ stateLabel[s.status] }}</span>
+      </div>
+      <p>
+        {{ s.subject_code }} · {{ s.date | date: 'EEE, d MMM y' }} ·
+        {{ formatTime(s.start_time) }} to {{ formatTime(s.end_time) }}
+      </p>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <strong>{{ c.present }}</strong>
+        <span>Present</span>
+      </div>
+      <div class="stat">
+        <strong>{{ c.absent }}</strong>
+        <span>Absent</span>
+      </div>
+      <div class="stat">
+        <strong>{{ c.all }}</strong>
+        <span>Students</span>
+      </div>
+      <div class="meter" role="img" [attr.aria-label]="percentPresent + '% present'">
+        <span [style.width.%]="percentPresent"></span>
+      </div>
+    </div>
+  </header>
+
+  @if (isSubmitted) {
+    <p class="note">
+      Submitted
+      @if (s.submitted_at) {
+        {{ s.submitted_at | date: 'medium' }}
+      }
+      @if (markedBy) {
+        · Marked by {{ markedBy }}
+      }
+    </p>
+  }
+
+  @if (isCancelled) {
+    <div class="alert alert-warning" role="status">
+      <span>
+        This lecture was cancelled
+        @if (s.cancellation_reason) {
+          : {{ s.cancellation_reason }}
+        }
+        .
+      </span>
+    </div>
+  }
+
+  @if (showCancel) {
+    <form class="card inline-form" (ngSubmit)="cancelLecture()">
+      <label class="form-label" for="cancel-reason">Why is this lecture cancelled?</label>
+      <textarea
+        id="cancel-reason"
+        name="cancelReason"
+        class="textarea"
+        rows="2"
+        [(ngModel)]="cancelReason"
+        placeholder="For example: teacher on leave"
+      ></textarea>
+      <div class="row">
+        <button
+          class="btn btn-danger"
+          type="submit"
+          [class.is-loading]="cancelling"
+          [disabled]="!cancelReason.trim() || cancelling"
+        >
+          Cancel this lecture
+        </button>
+        <button class="btn btn-secondary" type="button" (click)="closeCancel()">Keep it</button>
+      </div>
+    </form>
+  }
+
+  <section class="card students" [class.dimmed]="isCancelled">
+    <div class="toolbar">
+      <div class="input-group search">
+        <span class="icon icon-search input-icon"></span>
+        <input
+          type="search"
+          name="search"
+          placeholder="Search name or roll number"
+          aria-label="Search students"
+          [(ngModel)]="search"
+        />
+      </div>
+
+      <div class="chips" role="group" aria-label="Show">
+        <button
+          type="button"
+          class="chip"
+          [class.active]="filter === 'ALL'"
+          (click)="filter = 'ALL'"
+        >
+          All <span>{{ c.all }}</span>
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.active]="filter === 'PRESENT'"
+          (click)="filter = 'PRESENT'"
+        >
+          Present <span>{{ c.present }}</span>
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.active]="filter === 'ABSENT'"
+          (click)="filter = 'ABSENT'"
+        >
+          Absent <span>{{ c.absent }}</span>
+        </button>
+      </div>
+
+      @if (isOpen) {
+        <button class="btn btn-secondary" type="button" (click)="markAllPresent()">
+          Mark all present
+        </button>
+      }
+    </div>
+
+    <ul class="list">
+      @for (record of visibleRecords; track record.public_id) {
+        <li
+          class="student"
+          [class.is-present]="record.status === 'PRESENT'"
+          [class.is-absent]="record.status === 'ABSENT'"
+        >
+          <span class="avatar" aria-hidden="true">{{ initial(record) }}</span>
+
+          <div class="who">
+            <strong>{{ record.student_name }}</strong>
+            <small>Roll {{ record.roll_number }}</small>
+          </div>
+
+          @if (isOpen) {
+            <div class="segmented">
+              <button
+                type="button"
+                class="present"
+                [class.active]="record.status === 'PRESENT'"
+                (click)="setStatus(record, 'PRESENT')"
+              >
+                Present
+              </button>
+              <button
+                type="button"
+                class="absent"
+                [class.active]="record.status === 'ABSENT'"
+                (click)="setStatus(record, 'ABSENT')"
+              >
+                Absent
+              </button>
+            </div>
+          } @else {
+            <span
+              class="badge"
+              [ngClass]="record.status === 'PRESENT' ? 'badge-success' : 'badge-danger'"
+            >
+              {{ record.status === 'PRESENT' ? 'Present' : 'Absent' }}
+            </span>
+            @if (isSubmitted) {
+              <button
+                class="btn btn-secondary btn-sm"
+                type="button"
+                (click)="openCorrection(record)"
+              >
+                Correct
+              </button>
+            }
+          }
+
+          @if (correcting === record) {
+            <form class="inline-form correction" (ngSubmit)="saveCorrection()">
+              <label class="form-label" for="correction-reason">
+                Change {{ record.student_name }} to
+                <strong>{{ flipped(record) === 'PRESENT' ? 'Present' : 'Absent' }}</strong
+                >. Reason:
+              </label>
+              <textarea
+                id="correction-reason"
+                name="correctionReason"
+                class="textarea"
+                rows="2"
+                [(ngModel)]="correctionReason"
+              ></textarea>
+              <div class="row">
+                <button
+                  class="btn btn-primary"
+                  type="submit"
+                  [class.is-loading]="savingCorrection"
+                  [disabled]="!correctionReason.trim() || savingCorrection"
+                >
+                  Save correction
+                </button>
+                <button class="btn btn-secondary" type="button" (click)="closeCorrection()">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          }
+        </li>
+      } @empty {
+        <li class="empty">
+          @if (c.all === 0) {
+            No students are enrolled for this subject.
+          } @else {
+            No students match your search.
+          }
+        </li>
+      }
+    </ul>
+  </section>
+
+  @if (isSubmitted && corrections.length > 0) {
+    <details class="card history">
+      <summary>Corrections ({{ corrections.length }})</summary>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Change</th>
+              <th>Reason</th>
+              <th>By</th>
+              <th>When</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (correction of corrections; track correction.public_id) {
+              <tr>
+                <td>{{ correction.student_name }}</td>
+                <td>{{ correction.old_status }} to {{ correction.new_status }}</td>
+                <td>{{ correction.reason }}</td>
+                <td>{{ correction.changed_by_name }}</td>
+                <td>{{ correction.changed_at | date: 'medium' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </details>
+  }
+
+  @if (isOpen) {
+    <div class="action-bar">
+      <span class="summary">
+        <strong class="text-success">{{ c.present }} present</strong>
+        ·
+        <strong class="text-danger">{{ c.absent }} absent</strong>
+        <span class="text-muted">of {{ c.all }}</span>
+        @if (saving > 0) {
+          <span class="text-subtle">Saving...</span>
+        }
+      </span>
+      <span class="spacer"></span>
+      <button class="btn btn-secondary" type="button" (click)="openCancel()">Cancel lecture</button>
+      <button
+        class="btn btn-primary"
+        type="button"
+        [class.is-loading]="submitting"
+        [disabled]="submitting || saving > 0"
+        (click)="submit()"
+      >
+        Submit attendance
+      </button>
+    </div>
+  }
+}

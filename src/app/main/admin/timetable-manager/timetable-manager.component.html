@@ -1,0 +1,241 @@
+<header class="page-banner">
+  <div>
+    <h1>Timetable</h1>
+    <p>
+      The weekly lectures of your college.
+      @if (loaded) {
+        {{ count }} {{ count === 1 ? 'slot' : 'slots' }}
+      }
+    </p>
+  </div>
+
+  <button class="btn btn-secondary" type="button" (click)="openAdd()">
+    <span class="icon icon-plus icon-sm"></span>
+    Add slot
+  </button>
+</header>
+
+<section class="card filters" [formGroup]="filters">
+  <div class="form-field">
+    <label class="form-label" for="teacher-filter">Teacher</label>
+    <select id="teacher-filter" class="select" formControlName="teacher">
+      <option value="">All teachers</option>
+      @for (teacher of teachers; track teacher.id) {
+        <option [value]="teacher.id">{{ teacher.full_name }} ({{ teacher.employee_id }})</option>
+      }
+    </select>
+  </div>
+
+  <label class="check inactive-toggle">
+    <input type="checkbox" formControlName="showInactive" />
+    Show inactive slots
+  </label>
+
+  @if (hasFilters) {
+    <button class="btn btn-ghost" type="button" (click)="clearFilters()">Clear</button>
+  }
+</section>
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="retry()">Try again</button>
+  </div>
+}
+
+@if (truncated) {
+  <div class="alert alert-warning" role="status">
+    <span>
+      Showing the first {{ slots.length }} of {{ count }} slots. Pick a teacher to see the rest.
+    </span>
+  </div>
+}
+
+@if (loaded && slots.length === 0 && !error) {
+  <section class="card">
+    <div class="empty-state">
+      <span class="icon icon-calendar icon-xl"></span>
+      <h3>No slots yet</h3>
+      <p>Add a weekly slot so the teacher sees the lecture on the Today page.</p>
+      <button class="btn btn-primary" type="button" (click)="openAdd()">Add slot</button>
+    </div>
+  </section>
+}
+
+@if (slots.length > 0) {
+  <div class="week" [class.loading]="loading">
+    @for (day of days; track day.number) {
+      <section class="day" [class.today]="day.number === todayNumber">
+        <h3>
+          {{ day.name }}
+          @if (day.number === todayNumber) {
+            <span class="badge badge-primary">Today</span>
+          }
+        </h3>
+
+        @for (slot of day.slots; track slot.public_id) {
+          <article class="slot" [class.faded]="!slot.is_active">
+            <span class="time">
+              {{ formatTime(slot.start_time) }} - {{ formatTime(slot.end_time) }}
+            </span>
+            <strong>{{ slot.subject_name }}</strong>
+            <small class="text-muted">
+              {{ slot.teacher_name }}
+              @if (slot.room) {
+                · Room {{ slot.room }}
+              }
+            </small>
+            <small class="text-subtle">
+              {{ slot.valid_from | date: 'd MMM y' }} to {{ slot.valid_to | date: 'd MMM y' }}
+              @if (!slot.is_active) {
+                · <span class="badge badge-warning">Inactive</span>
+              }
+            </small>
+
+            <div class="slot-actions">
+              <button class="btn btn-secondary btn-sm" type="button" (click)="openEdit(slot)">
+                Edit
+              </button>
+              <button class="btn btn-ghost btn-sm" type="button" (click)="toggleActive(slot)">
+                {{ slot.is_active ? 'Deactivate' : 'Activate' }}
+              </button>
+            </div>
+          </article>
+        } @empty {
+          <p class="none">No lectures</p>
+        }
+      </section>
+    }
+  </div>
+}
+
+@if (showForm) {
+  <div class="modal-backdrop" (click)="closeForm()">
+    <form
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="slot-title"
+      [formGroup]="form"
+      (click)="$event.stopPropagation()"
+      (ngSubmit)="save()"
+      novalidate
+    >
+      <div class="modal-header">
+        <h3 id="slot-title">{{ editing ? 'Edit slot' : 'Add a slot' }}</h3>
+        <button class="btn btn-ghost btn-sm" type="button" (click)="closeForm()">Close</button>
+      </div>
+
+      <div class="modal-body">
+        @for (message of formErrors; track message) {
+          <div class="alert alert-danger" role="alert">{{ message }}</div>
+        }
+
+        @if (editing; as slot) {
+          <div class="fixed">
+            <strong>{{ slot.subject_name }}</strong>
+            <span class="text-muted">
+              {{ slot.teacher_name }} · {{ slot.academic_year_name }}
+            </span>
+            <small class="text-subtle">
+              The teacher and subject cannot be changed. Add a new slot instead.
+            </small>
+          </div>
+        } @else {
+          <div class="form-field">
+            <label class="form-label" for="slot-year">Academic year</label>
+            <select id="slot-year" class="select" formControlName="year">
+              @for (year of years; track year.id) {
+                <option [ngValue]="year.id">{{ year.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="slot-assignment">Teacher and subject</label>
+            <select id="slot-assignment" class="select" formControlName="teacher_assignment">
+              <option [ngValue]="null" disabled>Choose who teaches what</option>
+              @for (item of assignments; track item.id) {
+                <option [ngValue]="item.id">{{ assignmentLabel(item) }}</option>
+              }
+            </select>
+            @if (form.controls['teacher_assignment'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+        }
+
+        <div class="form-field">
+          <label class="form-label" for="slot-day">Day</label>
+          <select id="slot-day" class="select" formControlName="day_of_week">
+            @for (day of weekdays; track day.number) {
+              <option [ngValue]="day.number">{{ day.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="two">
+          <div class="form-field">
+            <span class="form-label" id="slot-start-label">Starts</span>
+            <app-time-select
+              formControlName="start_time"
+              labelledBy="slot-start-label"
+            ></app-time-select>
+            @if (form.controls['start_time'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+
+          <div class="form-field">
+            <span class="form-label" id="slot-end-label">Ends</span>
+            <app-time-select
+              formControlName="end_time"
+              labelledBy="slot-end-label"
+            ></app-time-select>
+            @if (form.controls['end_time'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="slot-room">Room (optional)</label>
+          <input id="slot-room" class="input" type="text" formControlName="room" maxlength="50" />
+          @if (form.controls['room'] | formError; as error) {
+            <p class="form-error">{{ error }}</p>
+          }
+        </div>
+
+        <div class="two">
+          <div class="form-field">
+            <label class="form-label" for="slot-from">Valid from</label>
+            <input id="slot-from" class="input" type="date" formControlName="valid_from" />
+            @if (form.controls['valid_from'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="slot-to">Valid until</label>
+            <input id="slot-to" class="input" type="date" formControlName="valid_to" />
+            @if (form.controls['valid_to'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" (click)="closeForm()">Cancel</button>
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [class.is-loading]="saving"
+          [disabled]="saving"
+        >
+          {{ editing ? 'Save changes' : 'Add slot' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}

@@ -1,0 +1,92 @@
+// Design tokens as CSS custom properties, so colours live in one place.
+// Components use these (var(--color-text)), never raw hex values.
+
+:root {
+  // Brand
+  --color-primary: #5046e5;
+  --color-primary-hover: #4338ca;
+  --color-primary-soft: #ece9fd;
+  --color-primary-light: #7c6ff0;
+  --color-on-primary: #ffffff;
+
+  // Surfaces and lines
+  --color-bg: #eef1f4;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f9fafb;
+  --color-border: #e5e7eb;
+  --color-border-strong: #d1d5db;
+
+  // Text
+  --color-text: #111827;
+  --color-text-muted: #4b5563;
+  --color-text-subtle: #6b7280;
+
+  // Status colours: a solid tone, a soft background, and readable text on it
+  --color-success: #16a34a;
+  --color-success-soft: #dcfce7;
+  --color-success-text: #166534;
+  --color-warning: #d97706;
+  --color-warning-soft: #fef3c7;
+  --color-warning-text: #92400e;
+  --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
+  --color-danger-soft: #fee2e2;
+  --color-danger-text: #991b1b;
+  --color-info: #0284c7;
+  --color-info-soft: #e0f2fe;
+  --color-info-text: #075985;
+
+  // Spacing scale (4px steps)
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 2.5rem;
+  --space-8: 3rem;
+
+  // Shape and depth
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-full: 999px;
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 8%);
+  --shadow-md: 0 4px 12px rgb(15 23 42 / 10%);
+  --shadow-lg: 0 12px 32px rgb(15 23 42 / 18%);
+
+  // Typography: system fonts, so nothing is downloaded
+  --font-sans: Roboto, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --leading: 1.5;
+
+  // Sidebar: a deep indigo that goes with the brand colour
+  --sidebar-bg: #1e1b4b;
+  --sidebar-text: #c9c8ea;
+  --sidebar-text-strong: #ffffff;
+  --sidebar-muted: #8f8dc4;
+  --sidebar-hover: rgb(255 255 255 / 7%);
+  --sidebar-active: rgb(255 255 255 / 14%);
+  --sidebar-accent: #a5a0ff;
+  --sidebar-line: rgb(255 255 255 / 12%);
+
+  // Layout
+  --sidebar-width: 14rem;
+  --topbar-height: 3.5rem;
+  --content-max: 100rem;
+
+  // Stacking order
+  --z-sidebar: 30;
+  --z-topbar: 40;
+  --z-modal: 60;
+  --z-toast: 70;
+
+  --transition: 150ms ease;
+  // Opening and closing the sidebar: sidebar, top bar and page all use the same timing.
+  --transition-layout: 260ms cubic-bezier(0.4, 0, 0.2, 1);
+}

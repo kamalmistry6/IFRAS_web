@@ -1,0 +1,89 @@
+// A weekly timetable, as classes. The teacher's page and the administrator's manager both use it.
+//
+//   <div class="week">
+//     <section class="day today">
+//       <h3>Thursday <span class="badge badge-primary">Today</span></h3>
+//       <article class="slot">                    (add .faded for an ended or inactive slot)
+//         <span class="time">9:00 AM - 10:00 AM</span>
+//         <strong>Machine Learning</strong>
+//         <small class="text-muted">58099 · Room B-12</small>
+//       </article>
+//       <p class="none">No lectures</p>
+//     </section>
+//   </div>
+
+// One column per weekday; they wrap onto more rows on narrow screens.
+.week {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+
+  h3 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0;
+    font-size: var(--text-md);
+  }
+
+  // Today's column stands out.
+  &.today {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+}
+
+.slot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: var(--space-3);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+
+  .time {
+    color: var(--color-primary);
+    font-size: var(--text-sm);
+    font-weight: 700;
+  }
+
+  &.faded {
+    border-left-color: var(--color-border-strong);
+    background: var(--color-surface-muted);
+
+    > :not(.slot-actions) {
+      opacity: 0.75;
+    }
+
+    .time {
+      color: var(--color-text-muted);
+    }
+  }
+
+  // Buttons on a slot (the administrator's edit and deactivate).
+  .slot-actions {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+  }
+}
+
+.none {
+  margin: 0;
+  padding: var(--space-3) 0;
+  color: var(--color-text-subtle);
+  font-size: var(--text-sm);
+  text-align: center;
+}

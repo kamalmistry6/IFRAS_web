@@ -1,0 +1,76 @@
+<div class="backdrop" [class.show]="open" (click)="closed.emit()"></div>
+
+<aside class="sidebar" [class.open]="open" [class.collapsed]="collapsed" aria-label="Main menu">
+  <div class="brand">
+    <button
+      type="button"
+      class="logo"
+      [attr.aria-label]="collapsed ? 'Expand menu' : 'Collapse menu'"
+      [title]="collapsed ? 'Expand menu' : 'Collapse menu'"
+      (click)="toggleCollapsed()"
+    >
+      <span class="icon icon-landmark"></span>
+    </button>
+    <a class="name" routerLink="/" (click)="closed.emit()">
+      <strong>{{ appName }}</strong>
+    </a>
+  </div>
+
+  <nav>
+    <ul>
+      @for (item of items$ | async; track item.label) {
+        <li>
+          @if (item.items) {
+            <button
+              type="button"
+              class="link"
+              [title]="collapsed ? item.label : ''"
+              [class.parent-active]="isParentActive(item)"
+              [attr.aria-expanded]="isExpanded(item)"
+              (click)="toggle(item)"
+            >
+              <span class="icon" [ngClass]="'icon-' + item.icon"></span>
+              <span class="label">{{ item.label }}</span>
+              <span
+                class="icon icon-sm icon-chevron-down chevron"
+                [class.turned]="isExpanded(item)"
+              ></span>
+            </button>
+            @if (isExpanded(item)) {
+              <ul class="sub">
+                @for (child of item.items; track child.label) {
+                  <li>
+                    <a
+                      class="link"
+                      [routerLink]="child.route"
+                      routerLinkActive="active"
+                      (click)="closed.emit()"
+                    >
+                      <span class="label">{{ child.label }}</span>
+                    </a>
+                  </li>
+                }
+              </ul>
+            }
+          } @else {
+            <a
+              class="link"
+              [title]="collapsed ? item.label : ''"
+              [routerLink]="item.route"
+              routerLinkActive="active"
+              (click)="closed.emit()"
+            >
+              <span class="icon" [ngClass]="'icon-' + item.icon"></span>
+              <span class="label">{{ item.label }}</span>
+            </a>
+          }
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <button type="button" class="link logout" [title]="collapsed ? 'Logout' : ''" (click)="signOut()">
+    <span class="icon icon-logout"></span>
+    <span class="label">Logout</span>
+  </button>
+</aside>

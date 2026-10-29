@@ -1,0 +1,199 @@
+<header class="page-banner">
+  <div>
+    <h1>{{ isToday ? "Today's lectures" : 'Lectures' }}</h1>
+    <p>
+      {{ date | date: 'EEEE, d MMMM y' }}
+      @if (loaded) {
+        · {{ lectures.length }} {{ lectures.length === 1 ? 'lecture' : 'lectures' }}
+      }
+    </p>
+  </div>
+
+  <div class="row">
+    <button class="btn btn-secondary" type="button" (click)="openExtra()">
+      <span class="icon icon-plus icon-sm"></span>
+      Extra lecture
+    </button>
+    <input
+      class="input date"
+      type="date"
+      aria-label="Date"
+      [ngModel]="date"
+      (ngModelChange)="changeDate($event)"
+    />
+    @if (!isToday) {
+      <button class="btn btn-secondary" type="button" (click)="goToToday()">Today</button>
+    }
+  </div>
+</header>
+
+@if (showExtra) {
+  <div class="modal-backdrop" (click)="closeExtra()">
+    <form
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="extra-title"
+      [formGroup]="extraForm"
+      (click)="$event.stopPropagation()"
+      (ngSubmit)="startExtra()"
+      novalidate
+    >
+      <div class="modal-header">
+        <h3 id="extra-title">Start an extra lecture</h3>
+        <button class="btn btn-ghost btn-sm" type="button" (click)="closeExtra()">Close</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="text-muted hint">
+          Starts the attendance right away. For a lecture that is happening now or has already begun
+          today, for example a make-up class.
+        </p>
+
+        @for (message of extraErrors; track message) {
+          <div class="alert alert-danger" role="alert">{{ message }}</div>
+        }
+
+        <div class="form-field">
+          <label class="form-label" for="extra-subject">Subject</label>
+          <select id="extra-subject" class="select" formControlName="teacher_assignment">
+            <option [ngValue]="null" disabled>Choose a subject</option>
+            @for (item of assignments; track item.id) {
+              <option [ngValue]="item.id">
+                {{ item.subject_name }} ({{ item.subject_code }}) - {{ item.subject_type }}
+              </option>
+            }
+          </select>
+          @if (extraForm.controls['teacher_assignment'] | formError; as error) {
+            <p class="form-error">{{ error }}</p>
+          }
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="extra-date">Date</label>
+          <input id="extra-date" class="input" type="date" formControlName="date" [max]="today" />
+          @if (extraForm.controls['date'] | formError; as error) {
+            <p class="form-error">{{ error }}</p>
+          }
+        </div>
+
+        <div class="times">
+          <div class="form-field">
+            <span class="form-label" id="extra-start-label">Starts</span>
+            <app-time-select
+              formControlName="start_time"
+              labelledBy="extra-start-label"
+            ></app-time-select>
+            @if (extraForm.controls['start_time'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+
+          <div class="form-field">
+            <span class="form-label" id="extra-end-label">Ends</span>
+            <app-time-select
+              formControlName="end_time"
+              labelledBy="extra-end-label"
+            ></app-time-select>
+            @if (extraForm.controls['end_time'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" (click)="closeExtra()">Cancel</button>
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [class.is-loading]="savingExtra"
+          [disabled]="savingExtra"
+        >
+          Start attendance
+        </button>
+      </div>
+    </form>
+  </div>
+}
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="load()">Try again</button>
+  </div>
+}
+
+@if (loaded && lectures.length === 0 && !error) {
+  <section class="card">
+    <div class="empty-state">
+      <span class="icon icon-calendar icon-xl"></span>
+      <h3>No lectures scheduled for this day</h3>
+      <p>Pick another date to see its lectures.</p>
+    </div>
+  </section>
+}
+
+<div class="lectures">
+  @for (lecture of lectures; track lecture.slot_public_id ?? lecture.session?.public_id) {
+    <article class="card lecture">
+      <div class="top">
+        <span class="time">
+          <span class="icon icon-clock icon-sm"></span>
+          {{ formatTime(lecture.start_time) }} - {{ formatTime(lecture.end_time) }}
+        </span>
+        <span class="badge" [ngClass]="stateBadge[lecture.state]">
+          {{ stateLabel[lecture.state] }}
+        </span>
+      </div>
+
+      <div class="what">
+        <h3>{{ lecture.subject_name }}</h3>
+        <p class="text-muted">
+          {{ lecture.subject_code }}
+          @if (lecture.room) {
+            · Room {{ lecture.room }}
+          }
+          @if (!lecture.slot_public_id) {
+            · Extra lecture
+          }
+        </p>
+      </div>
+
+      @if (lecture.session && lecture.state !== 'CANCELLED') {
+        <p class="counts">
+          <span class="text-success">{{ lecture.session.present_count }} present</span>
+          <span class="text-danger">{{ lecture.session.absent_count }} absent</span>
+          <span class="text-muted">{{ lecture.session.total_students }} students</span>
+        </p>
+      }
+
+      @switch (action(lecture)) {
+        @case ('start') {
+          <button
+            class="btn btn-primary btn-block"
+            type="button"
+            [class.is-loading]="startingSlot === lecture.slot_public_id"
+            [disabled]="startingSlot !== null || !lecture.can_start"
+            (click)="open(lecture)"
+          >
+            Start attendance
+          </button>
+          @if (!lecture.can_start) {
+            <p class="start-note">{{ lecture.start_message }}</p>
+          }
+        }
+        @case ('continue') {
+          <button class="btn btn-primary btn-block" type="button" (click)="open(lecture)">
+            Continue
+          </button>
+        }
+        @case ('view') {
+          <button class="btn btn-secondary btn-block" type="button" (click)="open(lecture)">
+            View
+          </button>
+        }
+      }
+    </article>
+  }
+</div>

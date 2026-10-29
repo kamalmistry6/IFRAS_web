@@ -1,0 +1,78 @@
+.alert {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+  color: rgb(255 255 255 / 85%);
+  font-size: var(--text-sm);
+
+  &:hover {
+    color: var(--color-on-primary);
+  }
+}
+
+// Profile on the left, enrollments on the right; one under the other on narrow screens.
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+// The username and email: shown, not editable.
+.fixed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+
+  small {
+    margin-right: var(--space-2);
+  }
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  .what {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+}

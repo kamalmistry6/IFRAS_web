@@ -1,0 +1,23 @@
+@use 'styles/mixins' as m;
+
+// Topbar, sidebar and content all read --sidebar-width, so changing it here
+// moves all three together.
+.shell {
+  @include m.up(lg) {
+    &.collapsed {
+      --sidebar-width: 4.75rem;
+    }
+  }
+}
+
+.content {
+  min-height: 100vh;
+  padding-top: calc(var(--topbar-height) + var(--space-5));
+  padding-bottom: var(--space-7);
+
+  // Leave room for the permanent sidebar on wide screens.
+  @include m.up(lg) {
+    padding-left: var(--sidebar-width);
+    transition: padding-left var(--transition-layout);
+  }
+}

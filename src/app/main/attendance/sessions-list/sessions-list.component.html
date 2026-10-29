@@ -1,0 +1,151 @@
+<header class="page-banner">
+  <div>
+    <h1>{{ admin ? 'Sessions' : 'My sessions' }}</h1>
+    <p>
+      {{
+        admin
+          ? 'Every lecture of your college. Open one to review it, correct attendance or submit it for a teacher.'
+          : 'Find an earlier session, check its numbers, or open it to review and correct.'
+      }}
+    </p>
+  </div>
+</header>
+
+<section class="card filters" [formGroup]="filters">
+  <div class="form-field">
+    <label class="form-label" for="from">From</label>
+    <input id="from" class="input" type="date" formControlName="from" />
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="to">To</label>
+    <input id="to" class="input" type="date" formControlName="to" />
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="status">Status</label>
+    <select id="status" class="select" formControlName="status">
+      <option value="">All statuses</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ stateLabel[status] }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="subject">{{ admin ? 'Teacher and subject' : 'Subject' }}</label>
+    <select id="subject" class="select" formControlName="subject">
+      <option value="">{{ admin ? 'All teachers and subjects' : 'All subjects' }}</option>
+      @for (item of subjects; track item.id) {
+        <option [value]="item.id">{{ item.label }}</option>
+      }
+    </select>
+  </div>
+
+  @if (hasFilters) {
+    <button class="btn btn-ghost clear" type="button" (click)="clearFilters()">Clear</button>
+  }
+</section>
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="retry()">Try again</button>
+  </div>
+}
+
+<section class="card list" [class.loading]="loading">
+  @if (loaded && sessions.length === 0 && !error) {
+    <div class="empty-state">
+      <span class="icon icon-clipboard icon-xl"></span>
+      <h3>No sessions found</h3>
+      <p>
+        {{
+          hasFilters
+            ? 'Try a wider date range or clear the filters.'
+            : admin
+              ? 'Sessions started in your college will appear here.'
+              : 'Sessions you start will appear here.'
+        }}
+      </p>
+    </div>
+  } @else {
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Subject</th>
+            @if (admin) {
+              <th>Teacher</th>
+            }
+            <th>Status</th>
+            <th>Present</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (session of sessions; track session.public_id) {
+            <tr class="clickable" (click)="open(session)">
+              <td>{{ session.date | date: 'EEE, d MMM y' }}</td>
+              <td class="nowrap">
+                {{ formatTime(session.start_time) }} - {{ formatTime(session.end_time) }}
+              </td>
+              <td>
+                <a class="subject" [routerLink]="[basePath, session.public_id]">
+                  {{ session.subject_name }}
+                </a>
+                <small class="text-subtle">{{ session.subject_code }}</small>
+              </td>
+              @if (admin) {
+                <td>{{ session.teacher_name }}</td>
+              }
+              <td>
+                <span class="badge" [ngClass]="stateBadge[session.status]">
+                  {{ stateLabel[session.status] }}
+                </span>
+              </td>
+              <td>
+                @if (session.status === 'CANCELLED') {
+                  <span class="text-subtle">-</span>
+                } @else {
+                  <div class="present">
+                    <span class="bar"><span [style.width.%]="percent(session)"></span></span>
+                    <span class="nowrap">
+                      {{ session.present_count }} / {{ session.total_students }}
+                    </span>
+                  </div>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (count > 0) {
+      @let r = range;
+      <div class="pager">
+        <span>Showing {{ r.from }}-{{ r.to }} of {{ count }}</span>
+        <span class="spacer"></span>
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          [disabled]="page <= 1 || loading"
+          (click)="goTo(page - 1)"
+        >
+          Previous
+        </button>
+        <span>Page {{ page }} of {{ r.totalPages }}</span>
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          [disabled]="page >= r.totalPages || loading"
+          (click)="goTo(page + 1)"
+        >
+          Next
+        </button>
+      </div>
+    }
+  }
+</section>

@@ -1,0 +1,226 @@
+<header class="page-banner">
+  <div>
+    <h1>Subject assignments</h1>
+    <p>
+      Who teaches what. A teacher needs an assignment before they can have a timetable slot or take
+      attendance.
+    </p>
+  </div>
+
+  <button class="btn btn-secondary" type="button" (click)="openForm()">
+    <span class="icon icon-plus icon-sm"></span>
+    Assign subject
+  </button>
+</header>
+
+<section class="card filters" [formGroup]="filters">
+  <div class="input-group search">
+    <span class="icon icon-search input-icon"></span>
+    <input
+      type="search"
+      formControlName="search"
+      placeholder="Search teacher or subject"
+      aria-label="Search teacher or subject"
+    />
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="teacher-filter">Teacher</label>
+    <select id="teacher-filter" class="select" formControlName="teacher">
+      <option value="">All teachers</option>
+      @for (teacher of teachers; track teacher.id) {
+        <option [value]="teacher.id">{{ teacher.full_name }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="year-filter">Academic year</label>
+    <select id="year-filter" class="select" formControlName="year">
+      <option value="">All years</option>
+      @for (year of years; track year.id) {
+        <option [value]="year.id">{{ year.name }}</option>
+      }
+    </select>
+  </div>
+
+  @if (hasFilters) {
+    <button class="btn btn-ghost" type="button" (click)="clearFilters()">Clear</button>
+  }
+</section>
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="retry()">Try again</button>
+  </div>
+}
+
+<section class="card list" [class.loading]="loading">
+  @if (loaded && assignments.length === 0 && !error) {
+    <div class="empty-state">
+      <span class="icon icon-book icon-xl"></span>
+      <h3>No assignments found</h3>
+      <p>
+        {{
+          hasFilters
+            ? 'Try another search or clear the filters.'
+            : 'Assign a subject to a teacher to get started.'
+        }}
+      </p>
+      @if (!hasFilters) {
+        <button class="btn btn-primary" type="button" (click)="openForm()">Assign subject</button>
+      }
+    </div>
+  } @else {
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Teacher</th>
+            <th>Subject</th>
+            <th>Academic year</th>
+            <th>Assigned on</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of assignments; track item.public_id) {
+            <tr>
+              <td>
+                <strong>{{ item.teacher_name }}</strong>
+              </td>
+              <td>{{ item.subject_name }}</td>
+              <td>
+                <span class="badge badge-primary">{{ item.academic_year_name }}</span>
+              </td>
+              <td class="text-muted nowrap">{{ item.created_at | date: 'd MMM y' }}</td>
+              <td class="actions">
+                <button class="btn btn-ghost btn-sm remove" type="button" (click)="remove(item)">
+                  Remove
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (count > 0) {
+      @let r = range;
+      <div class="pager">
+        <span>Showing {{ r.from }}-{{ r.to }} of {{ count }}</span>
+        <span class="spacer"></span>
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          [disabled]="page <= 1 || loading"
+          (click)="goTo(page - 1)"
+        >
+          Previous
+        </button>
+        <span>Page {{ page }} of {{ r.totalPages }}</span>
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          [disabled]="page >= r.totalPages || loading"
+          (click)="goTo(page + 1)"
+        >
+          Next
+        </button>
+      </div>
+    }
+  }
+</section>
+
+@if (showForm) {
+  <div class="modal-backdrop" (click)="closeForm()">
+    <form
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="assign-title"
+      [formGroup]="form"
+      (click)="$event.stopPropagation()"
+      (ngSubmit)="save()"
+      novalidate
+    >
+      <div class="modal-header">
+        <h3 id="assign-title">Assign a subject</h3>
+        <button class="btn btn-ghost btn-sm" type="button" (click)="closeForm()">Close</button>
+      </div>
+
+      <div class="modal-body">
+        @for (message of formErrors; track message) {
+          <div class="alert alert-danger" role="alert">{{ message }}</div>
+        }
+
+        <div class="form-field">
+          <label class="form-label" for="assign-teacher">Teacher</label>
+          <select id="assign-teacher" class="select" formControlName="teacher">
+            <option [ngValue]="null" disabled>Choose a teacher</option>
+            @for (teacher of teachers; track teacher.id) {
+              <option [ngValue]="teacher.id">
+                {{ teacher.full_name }} ({{ teacher.employee_id }})
+              </option>
+            }
+          </select>
+          @if (form.controls['teacher'] | formError; as error) {
+            <p class="form-error">{{ error }}</p>
+          }
+        </div>
+
+        <div class="two">
+          <div class="form-field">
+            <label class="form-label" for="assign-year">Academic year</label>
+            <select id="assign-year" class="select" formControlName="year">
+              <option [ngValue]="null" disabled>Choose a year</option>
+              @for (year of years; track year.id) {
+                <option [ngValue]="year.id">{{ year.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="assign-program">Program</label>
+            <select id="assign-program" class="select" formControlName="program">
+              <option [ngValue]="null">All programs</option>
+              @for (program of programs; track program.id) {
+                <option [ngValue]="program.id">{{ program.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="assign-offering">Subject</label>
+          <select id="assign-offering" class="select" formControlName="subject_offering">
+            <option [ngValue]="null" disabled>
+              {{ loadingOfferings ? 'Loading subjects...' : 'Choose a subject' }}
+            </option>
+            @for (item of offerings; track item.id) {
+              <option [ngValue]="item.id">{{ offeringLabel(item) }}</option>
+            }
+          </select>
+          @if (form.controls['subject_offering'] | formError; as error) {
+            <p class="form-error">{{ error }}</p>
+          } @else if (!loadingOfferings && offerings.length === 0 && form.value.year) {
+            <p class="form-hint">No subjects are offered for this year and program.</p>
+          }
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" (click)="closeForm()">Cancel</button>
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [class.is-loading]="saving"
+          [disabled]="saving"
+        >
+          Assign
+        </button>
+      </div>
+    </form>
+  </div>
+}

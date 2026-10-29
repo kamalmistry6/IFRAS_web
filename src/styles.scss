@@ -1,0 +1,12 @@
+// Global styles. Everything reusable is a CSS class defined here, so a template
+// only needs  class="btn btn-primary"  or  class="card"  (no wrapper components).
+// Component-specific styles stay in each component's own .scss file.
+@use 'styles/tokens';
+@use 'styles/base';
+@use 'styles/icons';
+@use 'styles/buttons';
+@use 'styles/forms';
+@use 'styles/ui';
+@use 'styles/tables';
+@use 'styles/timetable';
+@use 'styles/utilities';

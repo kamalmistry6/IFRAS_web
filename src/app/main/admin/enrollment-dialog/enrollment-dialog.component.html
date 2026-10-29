@@ -1,0 +1,142 @@
+<div class="modal-backdrop" (click)="closed.emit()">
+  <form
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="enrol-title"
+    [formGroup]="form"
+    (click)="$event.stopPropagation()"
+    (ngSubmit)="save()"
+    novalidate
+  >
+    <div class="modal-header">
+      <h3 id="enrol-title">{{ editing ? 'Edit enrollment' : 'Enrol a student' }}</h3>
+      <button class="btn btn-ghost btn-sm" type="button" (click)="closed.emit()">Close</button>
+    </div>
+
+    <div class="modal-body">
+      @for (message of formErrors; track message) {
+        <div class="alert alert-danger" role="alert">{{ message }}</div>
+      }
+
+      @if (student || enrollment) {
+        <div class="fixed">
+          <strong>{{ student?.full_name || enrollment?.student_name }}</strong>
+          @if (editing) {
+            <small class="text-subtle">
+              The student and the academic year cannot be changed after enrolling.
+            </small>
+          }
+        </div>
+      } @else {
+        <div class="form-field">
+          <label class="form-label" for="enrol-student">Student</label>
+          @if (chosen; as picked) {
+            <div class="picked">
+              <span>
+                <strong>{{ picked.full_name }}</strong>
+                <small class="text-subtle">{{ picked.username }}</small>
+              </span>
+              <button class="btn btn-ghost btn-sm" type="button" (click)="clearChoice()">
+                Change
+              </button>
+            </div>
+          } @else {
+            <div class="input-group">
+              <span class="icon icon-search input-icon"></span>
+              <input
+                id="enrol-student"
+                type="search"
+                autocomplete="off"
+                placeholder="Type a name or username"
+                [formControl]="studentSearch"
+              />
+            </div>
+            @if (candidates.length > 0) {
+              <ul class="candidates">
+                @for (candidate of candidates; track candidate.id) {
+                  <li>
+                    <button type="button" (click)="choose(candidate)">
+                      <strong>{{ candidate.full_name }}</strong>
+                      <small class="text-subtle">{{ candidate.username }}</small>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          }
+          @if (form.controls['student'] | formError; as error) {
+            <p class="form-error">{{ error }}</p>
+          }
+        </div>
+      }
+
+      <div class="two">
+        <div class="form-field">
+          <label class="form-label" for="enrol-year">Academic year</label>
+          <select id="enrol-year" class="select" formControlName="academic_year">
+            <option [ngValue]="null" disabled>Choose a year</option>
+            @for (year of years; track year.id) {
+              <option [ngValue]="year.id">{{ year.name }}</option>
+            }
+          </select>
+          @if (form.controls['academic_year'] | formError; as error) {
+            <p class="form-error">{{ error }}</p>
+          }
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="enrol-program">Program</label>
+          <select id="enrol-program" class="select" formControlName="program">
+            <option [ngValue]="null" disabled>Choose a program</option>
+            @for (program of programs; track program.id) {
+              <option [ngValue]="program.id">{{ program.name }}</option>
+            }
+          </select>
+          @if (form.controls['program'] | formError; as error) {
+            <p class="form-error">{{ error }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="two">
+        <div class="form-field">
+          <label class="form-label" for="enrol-study">Year of study</label>
+          <select id="enrol-study" class="select" formControlName="year_of_study">
+            <option [ngValue]="null" disabled>Choose a year</option>
+            @for (year of yearOptions; track year) {
+              <option [ngValue]="year">Year {{ year }}</option>
+            }
+          </select>
+          @if (form.controls['year_of_study'] | formError; as error) {
+            <p class="form-error">{{ error }}</p>
+          }
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="enrol-roll">Roll number</label>
+          <input id="enrol-roll" class="input" type="text" formControlName="roll_number" />
+          @if (form.controls['roll_number'] | formError; as error) {
+            <p class="form-error">{{ error }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="enrol-status">Status</label>
+        <select id="enrol-status" class="select" formControlName="status">
+          @for (status of statuses; track status.value) {
+            <option [value]="status.value">{{ status.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" type="button" (click)="closed.emit()">Cancel</button>
+      <button class="btn btn-primary" type="submit" [class.is-loading]="saving" [disabled]="saving">
+        {{ editing ? 'Save changes' : 'Enrol' }}
+      </button>
+    </div>
+  </form>
+</div>

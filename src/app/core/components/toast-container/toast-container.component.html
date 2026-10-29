@@ -1,0 +1,20 @@
+<div class="toasts" aria-live="polite">
+  @for (toast of toasts$ | async; track toast.id) {
+    <div
+      class="toast"
+      [ngClass]="'toast-' + toast.type"
+      [attr.role]="toast.type === 'error' ? 'alert' : 'status'"
+    >
+      <span class="icon" [ngClass]="'icon-' + icon(toast.type)"></span>
+      <div class="text">
+        <strong>{{ toast.title }}</strong>
+        @if (toast.message) {
+          <span>{{ toast.message }}</span>
+        }
+      </div>
+      <button class="close" type="button" aria-label="Dismiss" (click)="dismiss(toast)">
+        <span class="icon icon-x icon-sm"></span>
+      </button>
+    </div>
+  }
+</div>

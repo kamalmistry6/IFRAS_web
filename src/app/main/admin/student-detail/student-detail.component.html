@@ -1,0 +1,138 @@
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <a class="btn btn-secondary btn-sm" routerLink="/admin/students">Back to students</a>
+  </div>
+}
+
+@if (student; as s) {
+  <header class="page-banner">
+    <div class="intro">
+      <a class="back" routerLink="/admin/students">
+        <span class="icon icon-chevron-left icon-sm"></span>
+        Students
+      </a>
+      <h1>{{ s.full_name }}</h1>
+      <p>{{ s.username }}</p>
+    </div>
+  </header>
+
+  <div class="columns">
+    <form class="card profile" [formGroup]="form" (ngSubmit)="saveProfile()" novalidate>
+      <div class="card-header"><h3>Profile</h3></div>
+
+      <div class="card-body stack">
+        @for (message of formErrors; track message) {
+          <div class="alert alert-danger" role="alert">{{ message }}</div>
+        }
+
+        <div class="fixed">
+          <span><small class="text-subtle">Username</small> {{ s.username }}</span>
+          <span><small class="text-subtle">Email</small> {{ s.email || '-' }}</span>
+          <small class="text-subtle">The username and email cannot be changed.</small>
+        </div>
+
+        <div class="two">
+          <div class="form-field">
+            <label class="form-label" for="s-first">First name</label>
+            <input id="s-first" class="input" type="text" formControlName="first_name" />
+            @if (form.controls['first_name'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="s-last">Last name</label>
+            <input id="s-last" class="input" type="text" formControlName="last_name" />
+            @if (form.controls['last_name'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="two">
+          <div class="form-field">
+            <label class="form-label" for="s-dob">Date of birth</label>
+            <input id="s-dob" class="input" type="date" formControlName="date_of_birth" />
+            @if (form.controls['date_of_birth'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="s-phone">Phone</label>
+            <input id="s-phone" class="input" type="tel" formControlName="phone" />
+            @if (form.controls['phone'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="s-address">Address</label>
+          <textarea id="s-address" class="textarea" rows="2" formControlName="address"></textarea>
+          @if (form.controls['address'] | formError; as error) {
+            <p class="form-error">{{ error }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [class.is-loading]="saving"
+          [disabled]="saving || form.pristine"
+        >
+          Save changes
+        </button>
+      </div>
+    </form>
+
+    <section class="card enrollments">
+      <div class="card-header">
+        <h3>Enrollments</h3>
+        <button class="btn btn-secondary btn-sm" type="button" (click)="openEnrol()">
+          <span class="icon icon-plus icon-sm"></span>
+          Enrol
+        </button>
+      </div>
+
+      @if (enrollments.length === 0) {
+        <div class="empty-state">
+          <span class="icon icon-layers icon-xl"></span>
+          <h3>Not enrolled yet</h3>
+          <p>A student needs an enrollment to appear in attendance.</p>
+        </div>
+      } @else {
+        <ul class="list">
+          @for (item of enrollments; track item.public_id) {
+            <li>
+              <div class="what">
+                <strong>{{ item.academic_year_name }} · {{ item.program_name }}</strong>
+                <small class="text-muted">
+                  Year {{ item.year_of_study }} · Roll {{ item.roll_number }}
+                </small>
+              </div>
+              <span class="badge" [ngClass]="badge[item.status]">
+                {{ statusLabel[item.status] }}
+              </span>
+              <button class="btn btn-secondary btn-sm" type="button" (click)="openEdit(item)">
+                Edit
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+
+  @if (showEnrollment) {
+    <app-enrollment-dialog
+      [student]="s"
+      [enrollment]="editingEnrollment"
+      (saved)="enrollmentSaved()"
+      (closed)="closeEnrollment()"
+    ></app-enrollment-dialog>
+  }
+}

@@ -1,0 +1,291 @@
+<header class="page-banner">
+  <div>
+    <h1>Students</h1>
+    <p>Find a student, open their profile and enrollments, or add a new one.</p>
+  </div>
+
+  <button class="btn btn-secondary" type="button" (click)="openAdd()">
+    <span class="icon icon-plus icon-sm"></span>
+    Add student
+  </button>
+</header>
+
+<section class="card filters" [formGroup]="filters">
+  <div class="input-group search">
+    <span class="icon icon-search input-icon"></span>
+    <input
+      type="search"
+      formControlName="search"
+      placeholder="Search name, username, phone or roll number"
+      aria-label="Search students"
+    />
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="year-filter">Academic year</label>
+    <select id="year-filter" class="select" formControlName="year">
+      <option value="">All years</option>
+      @for (year of years; track year.id) {
+        <option [value]="year.id">{{ year.name }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="program-filter">Program</label>
+    <select id="program-filter" class="select" formControlName="program">
+      <option value="">All programs</option>
+      @for (program of programs; track program.id) {
+        <option [value]="program.id">{{ program.name }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="form-field narrow">
+    <label class="form-label" for="study-filter">Year of study</label>
+    <select id="study-filter" class="select" formControlName="yearOfStudy">
+      <option value="">Any</option>
+      @for (year of yearOptions; track year) {
+        <option [value]="year">Year {{ year }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="form-field narrow">
+    <label class="form-label" for="status-filter">Enrollment</label>
+    <select id="status-filter" class="select" formControlName="status">
+      <option value="">Any</option>
+      @for (status of statuses; track status.value) {
+        <option [value]="status.value">{{ status.label }}</option>
+      }
+    </select>
+  </div>
+
+  @if (hasFilters) {
+    <button class="btn btn-ghost" type="button" (click)="clearFilters()">Clear</button>
+  }
+</section>
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="retry()">Try again</button>
+  </div>
+}
+
+<section class="card list" [class.loading]="loading">
+  @if (loaded && students.length === 0 && !error) {
+    <div class="empty-state">
+      <span class="icon icon-users icon-xl"></span>
+      <h3>No students found</h3>
+      <p>
+        {{
+          hasFilters
+            ? 'Try another search or clear the filters.'
+            : 'Add your first student to get started.'
+        }}
+      </p>
+      @if (!hasFilters) {
+        <button class="btn btn-primary" type="button" (click)="openAdd()">Add student</button>
+      }
+    </div>
+  } @else {
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Username</th>
+            <th>Phone</th>
+            <th>Date of birth</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (student of students; track student.public_id) {
+            <tr class="clickable" (click)="open(student)">
+              <td>
+                <span class="who">
+                  <span class="avatar" aria-hidden="true">{{ student.full_name[0] }}</span>
+                  <strong>{{ student.full_name }}</strong>
+                </span>
+              </td>
+              <td class="text-muted">{{ student.username }}</td>
+              <td>{{ student.phone || '-' }}</td>
+              <td class="text-muted nowrap">
+                {{ student.date_of_birth ? (student.date_of_birth | date: 'd MMM y') : '-' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (count > 0) {
+      @let r = range;
+      <div class="pager">
+        <span>Showing {{ r.from }}-{{ r.to }} of {{ count }}</span>
+        <span class="spacer"></span>
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          [disabled]="page <= 1 || loading"
+          (click)="goTo(page - 1)"
+        >
+          Previous
+        </button>
+        <span>Page {{ page }} of {{ r.totalPages }}</span>
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          [disabled]="page >= r.totalPages || loading"
+          (click)="goTo(page + 1)"
+        >
+          Next
+        </button>
+      </div>
+    }
+  }
+</section>
+
+@if (showForm) {
+  <div class="modal-backdrop" (click)="closeForm()">
+    <form
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="student-title"
+      [formGroup]="form"
+      (click)="$event.stopPropagation()"
+      (ngSubmit)="save()"
+      novalidate
+    >
+      <div class="modal-header">
+        <h3 id="student-title">Add a student</h3>
+        <button class="btn btn-ghost btn-sm" type="button" (click)="closeForm()">Close</button>
+      </div>
+
+      <div class="modal-body">
+        @for (message of formErrors; track message) {
+          <div class="alert alert-danger" role="alert">{{ message }}</div>
+        }
+
+        <div class="two">
+          <div class="form-field">
+            <label class="form-label" for="s-first">First name</label>
+            <input id="s-first" class="input" type="text" formControlName="first_name" />
+            @if (form.controls['first_name'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="s-last">Last name</label>
+            <input id="s-last" class="input" type="text" formControlName="last_name" />
+            @if (form.controls['last_name'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="two">
+          <div class="form-field">
+            <label class="form-label" for="s-username">Username</label>
+            <input
+              id="s-username"
+              class="input"
+              type="text"
+              autocomplete="off"
+              formControlName="username"
+            />
+            @if (form.controls['username'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="s-password">Password</label>
+            <div class="input-group">
+              <input
+                id="s-password"
+                [type]="showPassword ? 'text' : 'password'"
+                autocomplete="new-password"
+                formControlName="password"
+              />
+              <button
+                class="input-action toggle"
+                type="button"
+                [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+                (click)="togglePassword()"
+              >
+                <span class="icon" [ngClass]="showPassword ? 'icon-eye' : 'icon-eye-off'"></span>
+              </button>
+            </div>
+            @if (form.controls['password'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            } @else {
+              <p class="form-hint">At least 8 characters.</p>
+            }
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="s-email">Email (optional)</label>
+          <input id="s-email" class="input" type="email" formControlName="email" />
+          @if (form.controls['email'] | formError; as error) {
+            <p class="form-error">{{ error }}</p>
+          }
+        </div>
+
+        @if (mustChooseCollege) {
+          <div class="form-field">
+            <label class="form-label" for="s-college">College</label>
+            <select id="s-college" class="select" formControlName="college">
+              <option [ngValue]="null" disabled>Choose a college</option>
+              @for (college of colleges; track college.id) {
+                <option [ngValue]="college.id">{{ college.name }}</option>
+              }
+            </select>
+            @if (form.controls['college'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+        }
+
+        <div class="two">
+          <div class="form-field">
+            <label class="form-label" for="s-dob">Date of birth (optional)</label>
+            <input id="s-dob" class="input" type="date" formControlName="date_of_birth" />
+            @if (form.controls['date_of_birth'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="s-phone">Phone (optional)</label>
+            <input id="s-phone" class="input" type="tel" formControlName="phone" />
+            @if (form.controls['phone'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="s-address">Address (optional)</label>
+          <textarea id="s-address" class="textarea" rows="2" formControlName="address"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" (click)="closeForm()">Cancel</button>
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [class.is-loading]="saving"
+          [disabled]="saving"
+        >
+          Add student
+        </button>
+      </div>
+    </form>
+  </div>
+}

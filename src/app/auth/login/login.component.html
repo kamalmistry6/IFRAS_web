@@ -1,0 +1,81 @@
+<main class="auth-page">
+  <section class="auth-card">
+    <header class="auth-brand">
+      <span class="auth-logo"><span class="icon icon-landmark icon-xl"></span></span>
+      <h1>{{ appName }}</h1>
+      <p>Sign in to your account</p>
+    </header>
+
+    <form class="stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @for (message of formErrors; track message) {
+        <div class="alert alert-danger" role="alert">{{ message }}</div>
+      }
+
+      <div class="form-field">
+        <label class="form-label" for="username">Username</label>
+        <div class="input-group">
+          <span class="icon icon-user input-icon"></span>
+          <input
+            id="username"
+            type="text"
+            formControlName="username"
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
+          />
+        </div>
+        @if (form.controls['username'] | formError; as error) {
+          <p class="form-error" role="alert">{{ error }}</p>
+        }
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="password">Password</label>
+        <div class="input-group">
+          <span class="icon icon-lock input-icon"></span>
+          <input
+            id="password"
+            formControlName="password"
+            [type]="showPassword ? 'text' : 'password'"
+            autocomplete="current-password"
+          />
+          <button
+            class="input-action toggle"
+            type="button"
+            (click)="togglePassword()"
+            [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+          >
+            <span class="icon" [ngClass]="showPassword ? 'icon-eye' : 'icon-eye-off'"></span>
+          </button>
+        </div>
+        @if (form.controls['password'] | formError; as error) {
+          <p class="form-error" role="alert">{{ error }}</p>
+        }
+      </div>
+
+      <div class="options">
+        <label class="check">
+          <input type="checkbox" formControlName="remember" />
+          Keep me signed in
+        </label>
+        <button class="link" type="button" (click)="toggleForgotHint()">Forgot password?</button>
+      </div>
+
+      @if (showForgotHint) {
+        <div class="alert alert-info" role="status">
+          <span class="icon icon-info"></span>
+          <span>Ask your college administrator to reset your password.</span>
+        </div>
+      }
+
+      <button
+        class="btn btn-primary btn-lg btn-block"
+        type="submit"
+        [class.is-loading]="loading"
+        [disabled]="loading"
+      >
+        Sign In
+      </button>
+    </form>
+  </section>
+</main>

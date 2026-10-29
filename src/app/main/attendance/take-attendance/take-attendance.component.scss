@@ -1,0 +1,243 @@
+@use 'styles/mixins' as m;
+
+.alert {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+// ---- Banner ------------------------------------------------------------------------
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+  color: rgb(255 255 255 / 85%);
+  font-size: var(--text-sm);
+
+  &:hover {
+    color: var(--color-on-primary);
+  }
+}
+
+.title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+
+  h1 {
+    margin: 0;
+  }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(5.5rem, 1fr));
+  gap: var(--space-3);
+  min-width: min(100%, 22rem);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 16%);
+  line-height: 1.2;
+
+  strong {
+    font-size: var(--text-xl);
+  }
+
+  span {
+    color: rgb(255 255 255 / 85%);
+    font-size: var(--text-sm);
+  }
+}
+
+// How much of the class is present.
+.meter {
+  grid-column: 1 / -1;
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: rgb(255 255 255 / 22%);
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--color-on-primary);
+    transition: width var(--transition-layout);
+  }
+}
+
+.note {
+  margin: calc(var(--space-2) * -1) 0 var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+// ---- Student list ---------------------------------------------------------------------
+
+.students {
+  margin-bottom: var(--space-4);
+
+  &.dimmed .list {
+    opacity: 0.55;
+  }
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+
+  .search {
+    flex: 1 1 16rem;
+    min-height: 2.5rem;
+  }
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.student {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  border-left: 4px solid transparent;
+  transition:
+    background-color var(--transition),
+    border-color var(--transition);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  // The state is visible at a glance, from the edge of the row.
+  &.is-present {
+    border-left-color: var(--color-success);
+  }
+
+  &.is-absent {
+    border-left-color: var(--color-danger);
+  }
+
+  &:hover {
+    background: var(--color-surface-muted);
+  }
+
+  .who {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.3;
+
+    small {
+      color: var(--color-text-subtle);
+    }
+  }
+
+  .segmented button {
+    min-width: 5.5rem;
+    padding-block: var(--space-2);
+  }
+}
+
+.avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.empty {
+  padding: var(--space-6);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.inline-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+
+  &.correction {
+    flex-basis: 100%;
+  }
+}
+
+form.inline-form.card {
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-surface);
+}
+
+// ---- Corrections history -------------------------------------------------------------
+
+.history {
+  margin-bottom: var(--space-4);
+
+  summary {
+    padding: var(--space-4) var(--space-5);
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  &[open] summary {
+    border-bottom: 1px solid var(--color-border);
+  }
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+// ---- Actions, always in reach ---------------------------------------------------------
+
+.action-bar {
+  position: sticky;
+  bottom: var(--space-4);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+
+  .summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+
+  @include m.up(md) {
+    padding-inline: var(--space-5);
+  }
+}
