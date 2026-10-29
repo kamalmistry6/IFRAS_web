@@ -1,0 +1,94 @@
+# Test, build and deploy the web app on every push to main.
+#
+# If the tests or the build fail, nothing is deployed. The new version is uploaded to the server
+# as a new release folder and then switched on (the same as deploy/deploy-web.ps1, which still works
+# for a deploy from your PC).
+#
+# One-time setup in GitHub (repository, Settings, Secrets and variables, Actions, New repository secret):
+#   DEPLOY_HOST     ifras.kamalmistry.in
+#   DEPLOY_USER     ifras
+#   DEPLOY_SSH_KEY  the PRIVATE key of a key made only for GitHub (its public half is in the
+#                   server's /home/ifras/.ssh/authorized_keys). See docs/AUTO_DEPLOY.md in IFRAS_api.
+name: Test and deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # the "Run workflow" button in the Actions tab
+
+# Two pushes in quick succession deploy one after the other, never at the same time.
+concurrency:
+  group: deploy-web
+  cancel-in-progress: false
+
+env:
+  REMOTE_DIR: /srv/ifras_web
+  KEEP_RELEASES: '5'
+
+jobs:
+  test-build-deploy:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npx ng test --no-watch
+
+      - name: Build
+        run: npx ng build
+
+      - name: Check the build
+        run: test -f dist/face-attendance/browser/index.html
+
+      - name: Prepare SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -t ed25519 "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          stamp="$(date -u +%Y%m%d-%H%M%S)"
+          echo "STAMP=$stamp" >> "$GITHUB_ENV"
+          tar -czf "/tmp/ifras-web-$stamp.tgz" -C dist/face-attendance/browser .
+          scp -i ~/.ssh/deploy_key -o BatchMode=yes "/tmp/ifras-web-$stamp.tgz" "$DEPLOY_USER@$DEPLOY_HOST:/tmp/"
+
+      - name: Switch to the new release
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "$DEPLOY_USER@$DEPLOY_HOST" bash -s <<EOF
+          set -euo pipefail
+          release="$REMOTE_DIR/releases/$STAMP"
+          mkdir -p "\$release"
+          tar -xzf "/tmp/ifras-web-$STAMP.tgz" -C "\$release"
+          rm -f "/tmp/ifras-web-$STAMP.tgz"
+          test -f "\$release/index.html"
+          ln -sfn "\$release" "$REMOTE_DIR/current"
+          cd "$REMOTE_DIR/releases"
+          ls -1 | grep -v '^placeholder\$' | sort | head -n -$KEEP_RELEASES | xargs -r rm -rf
+          echo "Serving $STAMP"
+          EOF
+
+      - name: Check the live site
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: curl -fsS --retry 5 --retry-delay 3 -o /dev/null "https://$DEPLOY_HOST/"

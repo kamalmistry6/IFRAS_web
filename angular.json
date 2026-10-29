@@ -64,6 +64,17 @@
                   "with": "src/environments/environment.development.ts"
                 }
               ]
+            },
+            "live": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.live.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -76,6 +87,9 @@
             },
             "development": {
               "buildTarget": "face-attendance:build:development"
+            },
+            "live": {
+              "buildTarget": "face-attendance:build:live"
             }
           },
           "defaultConfiguration": "development"
