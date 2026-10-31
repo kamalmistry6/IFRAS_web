@@ -3,6 +3,9 @@ import { CanActivateFn, CanMatchFn, Data, Router, UrlSegment } from '@angular/ro
 import { AuthService } from '../services';
 import { AuthorizeRule } from '../utils/authorization';
 
+/** Where a user who must choose a new password is sent, and the only page open to them. */
+export const PASSWORD_ROUTE = '/account/password';
+
 /** Reads the rule from a route's `data`. See the examples on AuthGuard. */
 export function ruleFromRouteData(data: Data | undefined): AuthorizeRule {
   return {
@@ -33,6 +36,7 @@ export function ruleFromRouteData(data: Data | undefined): AuthorizeRule {
  *
  * Not signed in            -> /login?returnUrl=...
  * Signed in but not allowed -> /forbidden
+ * Must choose a new password -> /account/password, and nothing else, until they have
  */
 export const AuthGuard: CanActivateFn = (route, state) => {
   const auth = inject(AuthService);
@@ -40,6 +44,10 @@ export const AuthGuard: CanActivateFn = (route, state) => {
 
   if (!auth.isAuthenticated) {
     return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
+  }
+
+  if (auth.user?.must_change_password && !state.url.split('?')[0].startsWith(PASSWORD_ROUTE)) {
+    return router.createUrlTree([PASSWORD_ROUTE]);
   }
 
   return auth.isAuthorizedNow(ruleFromRouteData(route.data))
@@ -61,6 +69,9 @@ export const AuthMatchGuard: CanMatchFn = (route, segments: UrlSegment[]) => {
     const returnUrl = '/' + segments.map((segment) => segment.path).join('/');
     return router.createUrlTree(['/login'], { queryParams: { returnUrl } });
   }
+
+  // Every area is closed until the password has been changed (the account area is not one of them).
+  if (auth.user?.must_change_password) return router.createUrlTree([PASSWORD_ROUTE]);
 
   return auth.isAuthorizedNow(ruleFromRouteData(route.data))
     ? true

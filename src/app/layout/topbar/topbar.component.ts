@@ -7,7 +7,7 @@ import {
   Output,
 } from '@angular/core';
 import { Observable } from 'rxjs';
-import { USER_TYPE_LABEL } from 'src/app/auth/enums';
+import { USER_TYPE_LABEL, UserType } from 'src/app/auth/enums';
 import { CurrentUser } from 'src/app/auth/models';
 import { AuthService } from 'src/app/auth/services';
 import { PageTitleStrategyService } from 'src/app/core/services';
@@ -45,6 +45,18 @@ export class TopbarComponent {
   get roleLabel(): string {
     const userType = this.auth.userType;
     return userType ? USER_TYPE_LABEL[userType] : '';
+  }
+
+  /** Where "My profile" leads, or null while the user's type has no profile page (then the menu offers the password page). */
+  get profileRoute(): string | null {
+    switch (this.auth.userType) {
+      case UserType.STUDENT:
+        return '/student/profile';
+      case UserType.TEACHER:
+        return '/teacher/profile';
+      default:
+        return null;
+    }
   }
 
   get initials(): string {

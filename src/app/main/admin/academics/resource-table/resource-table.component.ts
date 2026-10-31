@@ -437,7 +437,23 @@ export class ResourceTableComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    this.loadLookup(field.lookup, query, (options) => (this.fieldOptions[field.name] = options));
+    const lookup = field.lookup;
+    const exclude = field.exclude;
+    const load = (skip: Set<unknown>) =>
+      this.loadLookup(
+        lookup,
+        query,
+        (options) => (this.fieldOptions[field.name] = options.filter((o) => !skip.has(o.value))),
+      );
+
+    if (!exclude) {
+      load(new Set());
+      return;
+    }
+
+    this.academics
+      .list<Row>(exclude.resource, { page_size: 100, ...exclude.query(values) })
+      .subscribe((page) => load(new Set(page.results.map(exclude.id))));
   }
 
   /** 1 to twice the program's years, without the numbers the program already has. */

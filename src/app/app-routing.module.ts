@@ -53,6 +53,10 @@ const routes: Routes = [
         data: { roles: [UserType.STUDENT] },
         loadChildren: () => import('./main/student/student.module').then((m) => m.StudentModule),
       },
+      {
+        path: 'account',
+        loadChildren: () => import('./main/account/account.module').then((m) => m.AccountModule),
+      },
       { path: 'forbidden', component: ForbiddenComponent, title: 'No access' },
       { path: '**', component: NotFoundComponent, title: 'Page not found' },
     ],

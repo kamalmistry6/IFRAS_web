@@ -32,6 +32,15 @@ export class ApiClient {
     });
   }
 
+  /** A file the server generates (an Excel template, a report), as a Blob. */
+  getBlob(path: string, query?: ListQuery, options: ApiRequestOptions = {}): Observable<Blob> {
+    return this.http.get(this.url(path), {
+      params: this.toParams(query),
+      responseType: 'blob',
+      context: options.context,
+    });
+  }
+
   post<T>(path: string, body: unknown = {}, options: ApiRequestOptions = {}): Observable<T> {
     return this.http.post<T>(this.url(path), body, { context: options.context });
   }

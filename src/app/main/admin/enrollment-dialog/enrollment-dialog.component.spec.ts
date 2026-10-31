@@ -90,6 +90,42 @@ describe('EnrollmentDialogComponent', () => {
     expect(element.querySelector('#enrol-student')).toBeNull();
   });
 
+  describe('the roll number of the student', () => {
+    it('is filled in for a known student, and can still be changed', () => {
+      const { component } = create({ student: { ...student, roll_number: '78001' } });
+
+      expect(component.form.value.roll_number).toBe('78001');
+
+      component.form.patchValue({ roll_number: '78002' });
+      expect(component.form.value.roll_number).toBe('78002');
+    });
+
+    it('is filled in when a student is picked from the search, and replaced when another is picked', () => {
+      const { component } = create();
+
+      component.choose({ ...student, roll_number: '78001' });
+      expect(component.form.value.roll_number).toBe('78001');
+
+      component.choose({ ...student, id: 13, roll_number: '78002' });
+      expect(component.form.value.roll_number).toBe('78002');
+    });
+
+    it('stays as it is when the student has no roll number', () => {
+      const { component } = create();
+      component.form.patchValue({ roll_number: 'typed' });
+
+      component.choose({ ...student, roll_number: '' });
+
+      expect(component.form.value.roll_number).toBe('typed');
+    });
+
+    it('is not touched when an enrollment is edited', () => {
+      const { component } = create({ enrollment });
+
+      expect(component.form.getRawValue().roll_number).toBe('78012');
+    });
+  });
+
   it('offers years of study up to the length of the chosen program', () => {
     const { component } = create({ student });
 

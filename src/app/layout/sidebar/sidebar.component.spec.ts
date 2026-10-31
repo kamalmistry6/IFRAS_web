@@ -29,13 +29,14 @@ describe('SidebarComponent', () => {
     Array.from(element.querySelectorAll('nav .label')).map((node) => node.textContent?.trim());
 
   it.each([
-    [UserType.TEACHER, ['Dashboard', 'Today', 'My timetable', 'My sessions']],
+    [UserType.TEACHER, ['Dashboard', 'Today', 'My timetable', 'My sessions', 'Reports']],
     [
       UserType.ADMIN,
       [
         'Dashboard',
         'Academic setup',
         'Sessions',
+        'Reports',
         'Students',
         'Enrollments',
         'Teachers',
@@ -49,6 +50,7 @@ describe('SidebarComponent', () => {
         'Dashboard',
         'Academic setup',
         'Sessions',
+        'Reports',
         'Students',
         'Enrollments',
         'Teachers',

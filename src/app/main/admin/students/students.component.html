@@ -4,10 +4,16 @@
     <p>Find a student, open their profile and enrollments, or add a new one.</p>
   </div>
 
-  <button class="btn btn-secondary" type="button" (click)="openAdd()">
-    <span class="icon icon-plus icon-sm"></span>
-    Add student
-  </button>
+  <div class="row">
+    <button class="btn btn-secondary" type="button" (click)="openImport()">
+      <span class="icon icon-upload icon-sm"></span>
+      Import students
+    </button>
+    <button class="btn btn-secondary" type="button" (click)="openAdd()">
+      <span class="icon icon-plus icon-sm"></span>
+      Add student
+    </button>
+  </div>
 </header>
 
 <section class="card filters" [formGroup]="filters">
@@ -147,6 +153,15 @@
   }
 </section>
 
+@if (showImport) {
+  <app-student-import-dialog
+    [colleges]="colleges"
+    [mustChooseCollege]="mustChooseCollege"
+    (imported)="onImported()"
+    (closed)="showImport = false"
+  ></app-student-import-dialog>
+}
+
 @if (showForm) {
   <div class="modal-backdrop" (click)="closeForm()">
     <form
@@ -228,12 +243,20 @@
           </div>
         </div>
 
-        <div class="form-field">
-          <label class="form-label" for="s-email">Email (optional)</label>
-          <input id="s-email" class="input" type="email" formControlName="email" />
-          @if (form.controls['email'] | formError; as error) {
-            <p class="form-error">{{ error }}</p>
-          }
+        <div class="two">
+          <div class="form-field">
+            <label class="form-label" for="s-roll">Roll number (optional)</label>
+            <input id="s-roll" class="input" type="text" formControlName="roll_number" />
+            <p class="form-hint">Filled in when you enrol the student.</p>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="s-email">Email (optional)</label>
+            <input id="s-email" class="input" type="email" formControlName="email" />
+            @if (form.controls['email'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
         </div>
 
         @if (mustChooseCollege) {

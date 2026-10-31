@@ -10,9 +10,12 @@ import { ResourceTableComponent } from './academics/resource-table/resource-tabl
 import { AttendanceModule } from '../attendance/attendance.module';
 import { SessionsListComponent } from '../attendance/sessions-list/sessions-list.component';
 import { TakeAttendanceComponent } from '../attendance/take-attendance/take-attendance.component';
+import { ReportsComponent } from '../reports/reports/reports.component';
+import { ReportsModule } from '../reports/reports.module';
 import { EnrollmentsComponent } from './enrollments/enrollments.component';
 import { EnrollmentDialogComponent } from './enrollment-dialog/enrollment-dialog.component';
 import { StudentDetailComponent } from './student-detail/student-detail.component';
+import { StudentImportDialogComponent } from './student-import-dialog/student-import-dialog.component';
 import { StudentsComponent } from './students/students.component';
 import { TeachersComponent } from './teachers/teachers.component';
 import { TimetableManagerComponent } from './timetable-manager/timetable-manager.component';
@@ -57,6 +60,13 @@ const routes: Routes = [
     title: 'Session',
     canActivate: [AuthGuard],
     data: { permissions: [AppPermission.ATTENDANCE_SESSIONS_VIEW] },
+  },
+  {
+    path: 'reports',
+    component: ReportsComponent,
+    title: 'Reports',
+    canActivate: [AuthGuard],
+    data: { permissions: [AppPermission.REPORTS_VIEW] },
   },
   {
     path: 'students',
@@ -108,12 +118,13 @@ const routes: Routes = [
     ResourceTableComponent,
     StudentsComponent,
     StudentDetailComponent,
+    StudentImportDialogComponent,
     EnrollmentDialogComponent,
     EnrollmentsComponent,
     TeachersComponent,
     AssignmentsComponent,
     TimetableManagerComponent,
   ],
-  imports: [SharedModule, AttendanceModule, RouterModule.forChild(routes)],
+  imports: [SharedModule, AttendanceModule, ReportsModule, RouterModule.forChild(routes)],
 })
 export class AdminModule {}

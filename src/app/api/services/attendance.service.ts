@@ -7,6 +7,8 @@ import {
   CorrectionCreate,
   ListQuery,
   MyAssignment,
+  MyAttendanceRecord,
+  MyAttendanceSummary,
   MarkRecordsRequest,
   Page,
   SessionCreate,
@@ -43,11 +45,34 @@ export class AttendanceService {
    * The teacher's own subjects. Only the ones that can still start sessions by
    * default (for the extra-lecture form); `includeInactive` adds past ones (for filters).
    */
-  myAssignments(includeInactive = false): Observable<Page<MyAssignment>> {
+  myAssignments(
+    includeInactive = false,
+    academicYear?: number | null,
+  ): Observable<Page<MyAssignment>> {
     return this.api.get<Page<MyAssignment>>('/attendance/my-assignments/', {
       is_active: includeInactive ? undefined : true,
+      // Without a year the server lists the subjects of the current year only.
+      academic_year: academicYear ?? undefined,
       page_size: 100,
     });
+  }
+
+  /**
+   * A student's own attendance: overall and per subject, for one academic year (the current one when
+   * `academicYear` is left out). A 404 means the student was not enrolled that year.
+   */
+  myAttendance(academicYear?: number | null): Observable<MyAttendanceSummary> {
+    return this.api.get<MyAttendanceSummary>('/attendance/my/', {
+      academic_year: academicYear ?? undefined,
+    });
+  }
+
+  /**
+   * A student's own lectures, newest first. Filters: subject_offering, academic_year, date__gte,
+   * date__lte, status (PRESENT or ABSENT).
+   */
+  myRecords(query: ListQuery): Observable<Page<MyAttendanceRecord>> {
+    return this.api.get<Page<MyAttendanceRecord>>('/attendance/my/records/', query);
   }
 
   /** One page of sessions, newest first. Filters: date__gte, date__lte, status, teacher_assignment. */

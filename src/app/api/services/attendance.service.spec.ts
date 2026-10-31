@@ -44,6 +44,24 @@ describe('AttendanceService', () => {
     http.expectOne(`${base}/timetable/slot-1/start/`).flush({});
   });
 
+  it('asks for the own attendance of a student, for a year when one is chosen', () => {
+    service.myAttendance().subscribe();
+    http.expectOne(`${base}/my/`).flush({});
+
+    service.myAttendance(2).subscribe();
+    const request = http.expectOne(`${base}/my/?academic_year=2`);
+    expect(request.request.method).toBe('GET');
+    request.flush({});
+  });
+
+  it('asks for the own lectures of a student with the filters', () => {
+    service.myRecords({ subject_offering: 5, status: 'ABSENT', page: 2 }).subscribe();
+
+    const request = http.expectOne(`${base}/my/records/?subject_offering=5&status=ABSENT&page=2`);
+    expect(request.request.method).toBe('GET');
+    request.flush({ count: 0, next: null, previous: null, results: [] });
+  });
+
   it('sends only the changed records', () => {
     service.markRecords('s1', [{ public_id: 'r1', status: 'PRESENT' }]).subscribe();
 

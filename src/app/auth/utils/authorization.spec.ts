@@ -12,6 +12,7 @@ function user(overrides: Partial<CurrentUser>): CurrentUser {
     role: null,
     is_super_admin: false,
     college: null,
+    must_change_password: false,
     student_profile_public_id: null,
     teacher_profile_public_id: null,
     ...overrides,

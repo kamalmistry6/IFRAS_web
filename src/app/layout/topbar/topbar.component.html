@@ -31,13 +31,18 @@
 
       @if (menuOpen) {
         <div class="menu" role="menu">
-          <div class="menu-head">
-            <strong>{{ fullName }}</strong>
-            <span>{{ user.username }}</span>
-            @if (user.college) {
-              <span>{{ user.college.name }}</span>
-            }
-          </div>
+          @if (profileRoute) {
+            <a role="menuitem" [routerLink]="profileRoute" (click)="menuOpen = false">
+              <span class="icon icon-user"></span>
+              My profile
+            </a>
+          } @else {
+            <!-- Teachers and administrators have no profile page yet: the password page is all there is. -->
+            <a role="menuitem" routerLink="/account/password" (click)="menuOpen = false">
+              <span class="icon icon-key"></span>
+              Change password
+            </a>
+          }
           <button role="menuitem" type="button" (click)="signOut()">
             <span class="icon icon-logout"></span>
             Sign out

@@ -441,19 +441,91 @@ describe('ResourceTableComponent', () => {
       });
     });
 
-    it('offers only the active subjects of the program when making an offering', () => {
+    it('offers only the active subjects of the chosen semester when making an offering', () => {
+      data['semesters'] = [{ id: 23, semester_number: 3 }];
+      data['subjects'] = [{ id: 40, name: 'ML', code: '58099' }];
+      const { component } = create('subject-offerings');
+      component.openAdd();
+
+      component.form.patchValue({ academic_year: 1, program: 7 });
+      expect(api.list).toHaveBeenCalledWith('semesters', { page_size: 100, program: 7 });
+      expect(component.fieldOptions['semester'].map((o) => o.label)).toEqual(['Semester 3']);
+      expect(component.fieldOptions['subject']).toEqual([]);
+
+      component.form.patchValue({ semester: 23 });
+
+      expect(api.list).toHaveBeenLastCalledWith('subjects', {
+        page_size: 100,
+        semester: 23,
+        is_active: true,
+      });
+      expect(component.fieldOptions['subject'][0].label).toBe('ML (58099)');
+    });
+
+    it('leaves out the subjects already offered in the chosen academic year', () => {
+      data['semesters'] = [{ id: 23, semester_number: 3 }];
+      data['subjects'] = [
+        { id: 40, name: 'ML', code: '58099' },
+        { id: 41, name: 'NLP', code: '58061' },
+      ];
+      data['subject-offerings'] = [{ id: 9, subject: 41 }];
+      const { component } = create('subject-offerings');
+      component.openAdd();
+
+      component.form.patchValue({ academic_year: 1, program: 7 });
+      component.form.patchValue({ semester: 23 });
+
+      expect(api.list).toHaveBeenCalledWith('subject-offerings', {
+        page_size: 100,
+        academic_year: 1,
+        subject__semester: 23,
+      });
+      expect(component.fieldOptions['subject'].map((o) => o.label)).toEqual(['ML (58099)']);
+    });
+
+    it('lists no subjects until the academic year is chosen', () => {
+      data['semesters'] = [{ id: 23, semester_number: 3 }];
       data['subjects'] = [{ id: 40, name: 'ML', code: '58099' }];
       const { component } = create('subject-offerings');
       component.openAdd();
 
       component.form.patchValue({ program: 7 });
+      component.form.patchValue({ semester: 23 });
 
-      expect(api.list).toHaveBeenLastCalledWith('subjects', {
-        page_size: 100,
-        semester__program: 7,
-        is_active: true,
+      expect(component.fieldOptions['subject']).toEqual([]);
+    });
+
+    it('clears the semester and the subject when the program changes', () => {
+      data['semesters'] = [{ id: 23, semester_number: 3 }];
+      data['subjects'] = [{ id: 40, name: 'ML', code: '58099' }];
+      const { component } = create('subject-offerings');
+      component.openAdd();
+      component.form.patchValue({ academic_year: 1, program: 7 });
+      component.form.patchValue({ semester: 23 });
+      component.form.patchValue({ subject: 40 });
+
+      component.form.patchValue({ program: 8 });
+
+      expect(component.form.value.semester).toBeNull();
+      expect(component.form.value.subject).toBeNull();
+      expect(component.fieldOptions['subject']).toEqual([]);
+    });
+
+    it('never sends the program or the semester that only narrow the subjects', () => {
+      data['semesters'] = [{ id: 23, semester_number: 3 }];
+      data['subjects'] = [{ id: 40, name: 'ML', code: '58099' }];
+      const { component } = create('subject-offerings');
+      component.openAdd();
+      component.form.patchValue({ academic_year: 1, program: 7 });
+      component.form.patchValue({ semester: 23 });
+      component.form.patchValue({ subject: 40 });
+
+      component.save();
+
+      expect(api.create).toHaveBeenCalledWith('subject-offerings', {
+        academic_year: 1,
+        subject: 40,
       });
-      expect(component.fieldOptions['subject'][0].label).toBe('ML (58099)');
     });
 
     it('offers semester numbers up to twice the program length, without those already added', () => {

@@ -14,18 +14,19 @@ Pages are numbered by user type: **C** common, **T** teacher, **A** admin, **ST*
 
 **Where each user lands after login** (from `GET /auth/me/`): Teacher to `/teacher/today`, Admin and Super admin to `/admin/dashboard`, Student to `/student/attendance`.
 
-**Build status (2026-10-29).** Where the app differs from the suggestions below: forms are **dialogs** on their list page (not separate `/new` routes) except the student's own page, and A10 is one page with a tab per resource.
+**Build status (2026-10-31).** Where the app differs from the suggestions below: forms are **dialogs** on their list page (not separate `/new` routes) except the student's own page, and A10 is one page with a tab per resource.
 
 | Page | Route in the app | Status |
 |---|---|---|
 | C1 Login | `/login` | built |
 | C2 Shell, C3 error pages | (every signed-in page) | built |
-| C4 Change password | | not built |
+| C4 Change password | `/account/password` (opened from My profile for students and teachers; from the user menu for administrators until they have a profile page) | built. A user whose `must_change_password` is true can open only this page until they change it |
 | T1 Today (with T3 extra lecture as a dialog) | `/teacher/today` | built |
 | T2 Take attendance | `/teacher/sessions/:id` | built |
 | T4 My sessions | `/teacher/sessions` | built |
 | T5 My timetable | `/teacher/timetable` | built |
-| T6 My profile, teacher dashboard | `/teacher/dashboard` shows "coming soon" | not built |
+| T6 My profile | `/teacher/profile` (from the user menu) | built |
+| Teacher dashboard | `/teacher/dashboard` shows "coming soon" | not built |
 | A1 Admin dashboard | `/admin/dashboard` shows "coming soon" | not built |
 | A2, A3, A4 Students (list, add dialog, detail page) | `/admin/students`, `/admin/students/:id` | built |
 | A5 Enrollments | `/admin/enrollments` | built |
@@ -34,7 +35,10 @@ Pages are numbered by user type: **C** common, **T** teacher, **A** admin, **ST*
 | A8 Timetable manager | `/admin/timetable` | built |
 | A9 Sessions of the college | `/admin/sessions`, `/admin/sessions/:id` | built (starting a lecture for a teacher is not) |
 | A10 Academic setup | `/admin/academics` (tabs) | built (no "add the next level" prompt) |
-| ST1 to ST3 Student pages | `/student/attendance` shows "coming soon" | not built |
+| Reports: subject attendance, defaulters | `/admin/reports` (tabs), `/teacher/reports` (subject attendance only) | built, with Excel and CSV downloads |
+| ST1 My attendance | `/student/attendance` | built |
+| ST2 Lectures of one subject | `/student/attendance/:offering` | built |
+| ST3 My profile | `/student/profile` | built |
 
 ---
 

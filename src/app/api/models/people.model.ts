@@ -14,6 +14,8 @@ export interface StudentProfile {
   /** Read only: it cannot be changed after the account is created. */
   email: string;
   college: number;
+  /** The roll number the student was added with. The enrol dialog suggests it. */
+  roll_number: string;
   date_of_birth: ApiDate | null;
   phone: string;
   address: string;
@@ -28,9 +30,30 @@ export interface StudentCreate {
   last_name: string;
   email?: string;
   college: number;
+  roll_number?: string;
   date_of_birth?: ApiDate | null;
   phone?: string;
   address?: string;
+}
+
+/** One row of a student import. `ready` is a row that a check found fine (nothing created yet). */
+export interface StudentImportRow {
+  /** The row number in the file (the header is row 1). */
+  row: number;
+  username: string;
+  name: string;
+  status: 'created' | 'ready' | 'skipped' | 'error';
+  message: string;
+}
+
+export interface StudentImportResult {
+  dry_run: boolean;
+  total: number;
+  /** Created, or ready to be created when `dry_run` is true. */
+  created: number;
+  skipped: number;
+  failed: number;
+  rows: StudentImportRow[];
 }
 
 /** Only an administrator can edit a student, including their name. */

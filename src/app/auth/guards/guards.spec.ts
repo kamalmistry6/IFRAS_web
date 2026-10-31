@@ -17,6 +17,7 @@ import { HomeRedirectGuard, NoAuthGuard } from './no-auth.guard';
 /** A stand-in for AuthService whose user type each test sets. */
 const auth = {
   userType: null as UserType | null,
+  user: null as { must_change_password: boolean } | null,
   get isAuthenticated(): boolean {
     return this.userType !== null;
   },
@@ -30,6 +31,7 @@ describe('route guards', () => {
 
   beforeEach(() => {
     auth.userType = null;
+    auth.user = null;
     TestBed.configureTestingModule({
       providers: [provideRouter([]), { provide: AuthService, useValue: auth }],
     });
@@ -83,6 +85,38 @@ describe('route guards', () => {
 
       auth.userType = UserType.TEACHER;
       expect(outcome(run(AuthGuard, route(data), state('/x')))).toBe('/forbidden');
+    });
+  });
+
+  describe('a user who must choose a new password', () => {
+    beforeEach(() => {
+      auth.userType = UserType.STUDENT;
+      auth.user = { must_change_password: true };
+    });
+
+    it('is sent to the password page from any other page', () => {
+      expect(outcome(run(AuthGuard, route(), state('/student/attendance')))).toBe(
+        '/account/password',
+      );
+    });
+
+    it('may open the password page itself, with or without a query string', () => {
+      expect(outcome(run(AuthGuard, route(), state('/account/password')))).toBe(true);
+      expect(outcome(run(AuthGuard, route(), state('/account/password?x=1')))).toBe(true);
+    });
+
+    it('cannot download any area until the password is changed', () => {
+      const area = { data: { roles: [UserType.STUDENT] } } as unknown as Route;
+
+      expect(outcome(run(AuthMatchGuard, area, [new UrlSegment('student', {})]))).toBe(
+        '/account/password',
+      );
+    });
+
+    it('is let through again once the flag is cleared', () => {
+      auth.user = { must_change_password: false };
+
+      expect(outcome(run(AuthGuard, route(), state('/student/attendance')))).toBe(true);
     });
   });
 

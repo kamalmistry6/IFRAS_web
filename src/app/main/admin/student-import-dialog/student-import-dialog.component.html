@@ -1,0 +1,180 @@
+<div class="modal-backdrop" (click)="close()">
+  <div
+    class="modal import"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="import-title"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="modal-header">
+      <h3 id="import-title">Import students</h3>
+      <button class="btn btn-ghost btn-sm" type="button" [disabled]="working" (click)="close()">
+        Close
+      </button>
+    </div>
+
+    <div class="modal-body">
+      @if (error) {
+        <div class="alert alert-danger" role="alert">{{ error }}</div>
+      }
+
+      @switch (step) {
+        @case ('choose') {
+          <ol class="steps">
+            <li>
+              <strong>Get the template.</strong>
+              One row per student. Required: <b>roll_number</b>, <b>first_name</b>,
+              <b>last_name</b>. Optional: username, email, date_of_birth, phone, address.
+              <div>
+                <button
+                  class="btn btn-secondary btn-sm"
+                  type="button"
+                  [class.is-loading]="downloading"
+                  [disabled]="downloading"
+                  (click)="downloadTemplate()"
+                >
+                  Download the Excel template
+                </button>
+              </div>
+            </li>
+            <li>
+              <strong>Fill it in</strong> and choose the file here (.xlsx, .xls or .csv, up to
+              {{ maxRows }} students).
+              <div class="field">
+                <label class="form-label" for="import-file">File</label>
+                <input
+                  id="import-file"
+                  class="input"
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  (change)="choose($event)"
+                />
+              </div>
+
+              @if (mustChooseCollege) {
+                <div class="field">
+                  <label class="form-label" for="import-college">College</label>
+                  <select id="import-college" class="select" [(ngModel)]="college">
+                    <option [ngValue]="null" disabled>Choose a college</option>
+                    @for (item of colleges; track item.id) {
+                      <option [ngValue]="item.id">{{ item.name }}</option>
+                    }
+                  </select>
+                </div>
+              }
+            </li>
+          </ol>
+
+          <div class="alert alert-info">
+            The first password of every student is their <b>roll number</b>, and the username is the
+            roll number unless the file has a username. Nobody is enrolled by the import: do that
+            afterwards. Students who already exist (same username) are skipped.
+          </div>
+        }
+
+        @case ('checked') {
+          <p class="lead">
+            <strong>{{ file?.name }}</strong> was checked. Nothing has been created yet.
+          </p>
+          <div class="summary">
+            <span class="badge badge-success">{{ result?.created }} ready</span>
+            <span class="badge badge-warning">{{ result?.skipped }} skipped</span>
+            <span class="badge badge-danger">{{ result?.failed }} with errors</span>
+          </div>
+          <ng-container *ngTemplateOutlet="problemTable"></ng-container>
+          @if (result?.created === 0) {
+            <div class="alert alert-warning">
+              No student can be created from this file. Correct it and choose it again.
+            </div>
+          }
+        }
+
+        @case ('done') {
+          <div class="alert alert-success" role="status">
+            <b>{{ result?.created }}</b> students were created.
+          </div>
+          <div class="summary">
+            <span class="badge badge-success">{{ result?.created }} created</span>
+            <span class="badge badge-warning">{{ result?.skipped }} skipped</span>
+            <span class="badge badge-danger">{{ result?.failed }} with errors</span>
+          </div>
+          <ng-container *ngTemplateOutlet="problemTable"></ng-container>
+          <p class="form-hint">
+            Next, enrol the new students from the Enrollments page. They sign in with their username
+            and their roll number as the password.
+          </p>
+        }
+      }
+    </div>
+
+    <div class="modal-footer">
+      @switch (step) {
+        @case ('choose') {
+          <button class="btn btn-secondary" type="button" (click)="close()">Cancel</button>
+          <button
+            class="btn btn-primary"
+            type="button"
+            [class.is-loading]="working"
+            [disabled]="!canCheck"
+            (click)="check()"
+          >
+            Check the file
+          </button>
+        }
+        @case ('checked') {
+          <button class="btn btn-secondary" type="button" [disabled]="working" (click)="again()">
+            Choose another file
+          </button>
+          <button
+            class="btn btn-primary"
+            type="button"
+            [class.is-loading]="working"
+            [disabled]="working || !result?.created"
+            (click)="confirm()"
+          >
+            Import {{ result?.created }} students
+          </button>
+        }
+        @case ('done') {
+          <button class="btn btn-primary" type="button" (click)="close()">Done</button>
+        }
+      }
+    </div>
+  </div>
+</div>
+
+<ng-template #problemTable>
+  @if (problems.length) {
+    <div class="table-wrap problems">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Row</th>
+            <th>Student</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of problems; track row.row) {
+            <tr>
+              <td>{{ row.row }}</td>
+              <td>
+                {{ row.name || '-' }}
+                <div class="form-hint">{{ row.username }}</div>
+              </td>
+              <td>
+                <span
+                  class="badge"
+                  [class]="row.status === 'error' ? 'badge-danger' : 'badge-warning'"
+                >
+                  {{ statusLabel(row) }}
+                </span>
+                {{ row.message }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</ng-template>

@@ -1,0 +1,93 @@
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+
+  .search {
+    flex: 1 1 100%;
+    min-height: 2.5rem;
+  }
+
+  .form-field {
+    flex: 1 1 11rem;
+  }
+
+  .narrow {
+    flex: 0 1 9rem;
+  }
+}
+
+.alert {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+// Dim the list while a new filter loads, instead of flashing it empty.
+.list {
+  transition: opacity var(--transition);
+
+  &.loading {
+    opacity: 0.6;
+  }
+}
+
+.bar-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.summary {
+  margin: 0;
+}
+
+.downloads {
+  display: flex;
+  gap: var(--space-2);
+}
+
+// The upload arrow, turned to point down: a download.
+.flip {
+  transform: rotate(180deg);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.name {
+  display: block;
+  font-weight: 650;
+}
+
+.meter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  .bar {
+    width: 8rem;
+    height: 0.5rem;
+    overflow: hidden;
+    border-radius: var(--radius-full);
+    background: var(--color-border);
+
+    span {
+      display: block;
+      height: 100%;
+      background: var(--color-warning);
+    }
+  }
+}

@@ -21,6 +21,7 @@ const teacher: CurrentUser = {
   role: 'TEACHER',
   is_super_admin: false,
   college: { id: 1, public_id: 'c-1', name: 'SDSM College', code: '225' },
+  must_change_password: false,
   student_profile_public_id: null,
   teacher_profile_public_id: 't-1',
 };
@@ -209,9 +210,42 @@ describe('AuthService', () => {
 
       auth.changePassword({ old_password: 'old', new_password: 'new' }).subscribe();
       http.expectOne(`${base}/auth/change-password/`).flush({ access: 'a2', refresh: 'r2' });
+      http.expectOne(`${base}/auth/me/`).flush(teacher);
 
       expect(tokens.getAccessToken()).toBe('a2');
       expect(localStorage.getItem(KEY)).toBe('r2');
+    });
+
+    it('loads the user again, because the "choose a new password" flag is cleared', () => {
+      auth.loadCurrentUser().subscribe();
+      http.expectOne(`${base}/auth/me/`).flush({ ...teacher, must_change_password: true });
+      expect(auth.user?.must_change_password).toBe(true);
+      let done = false;
+
+      auth
+        .changePassword({ old_password: 'old', new_password: 'new' })
+        .subscribe(() => (done = true));
+      http.expectOne(`${base}/auth/change-password/`).flush({ access: 'a2', refresh: 'r2' });
+      expect(done).toBe(false);
+      http.expectOne(`${base}/auth/me/`).flush({ ...teacher, must_change_password: false });
+
+      expect(done).toBe(true);
+      expect(auth.user?.must_change_password).toBe(false);
+    });
+
+    it('does not load the user when the change is refused', () => {
+      auth.changePassword({ old_password: 'wrong', new_password: 'new' }).subscribe({
+        error: () => undefined,
+      });
+
+      http
+        .expectOne(`${base}/auth/change-password/`)
+        .flush(
+          { old_password: ['The current password is incorrect.'] },
+          { status: 400, statusText: 'Bad' },
+        );
+
+      http.expectNone(`${base}/auth/me/`);
     });
   });
 

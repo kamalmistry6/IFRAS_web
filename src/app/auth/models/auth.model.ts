@@ -21,6 +21,8 @@ export interface CurrentUser {
   is_super_admin: boolean;
   /** An admin's college, or the college of a student's or teacher's profile. */
   college: CollegeSummary | null;
+  /** true until a new student or teacher replaces the password an administrator gave them. */
+  must_change_password: boolean;
   student_profile_public_id: string | null;
   teacher_profile_public_id: string | null;
 }

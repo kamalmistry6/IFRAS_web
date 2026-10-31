@@ -140,11 +140,13 @@ export class AuthService {
   /**
    * Changing the password invalidates every older token on every device, so
    * the response carries a fresh pair; it replaces the stored one and keeps
-   * this device signed in.
+   * this device signed in. The user is loaded again, because the "choose a new password"
+   * flag is cleared by a successful change.
    */
   changePassword(request: ChangePasswordRequest): Observable<void> {
     return this.api.post<TokenPair>('/auth/change-password/', request).pipe(
       tap((tokens) => this.tokens.setTokens(tokens, this.tokens.isRemembered())),
+      switchMap(() => this.loadCurrentUser()),
       map(() => undefined),
     );
   }

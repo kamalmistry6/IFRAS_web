@@ -52,6 +52,13 @@ export const NAV_ITEMS: NavItem[] = [
     permissions: [AppPermission.ATTENDANCE_SESSIONS_VIEW],
   },
   {
+    label: 'Reports',
+    route: '/teacher/reports',
+    icon: 'bar-chart',
+    roles: [UserType.TEACHER],
+    permissions: [AppPermission.REPORTS_VIEW],
+  },
+  {
     label: 'Dashboard',
     route: '/admin/dashboard',
     icon: 'grid',
@@ -70,6 +77,13 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'clipboard',
     roles: [UserType.ADMIN, UserType.SUPER_ADMIN],
     permissions: [AppPermission.ATTENDANCE_SESSIONS_VIEW],
+  },
+  {
+    label: 'Reports',
+    route: '/admin/reports',
+    icon: 'bar-chart',
+    roles: [UserType.ADMIN, UserType.SUPER_ADMIN],
+    permissions: [AppPermission.REPORTS_VIEW],
   },
   {
     label: 'Students',

@@ -1,0 +1,212 @@
+<section class="card filters" [formGroup]="filters">
+  <div class="form-field">
+    <label class="form-label" for="sa-year">Academic year</label>
+    <select id="sa-year" class="select" formControlName="year">
+      @for (year of years; track year.id) {
+        <option [ngValue]="year.id">{{ year.name }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="form-field wide">
+    <label class="form-label" for="sa-subject">Subject</label>
+    <select id="sa-subject" class="select" formControlName="subject">
+      <option [ngValue]="null" disabled>Choose a subject</option>
+      @for (item of subjects; track item.id) {
+        <option [ngValue]="item.id">{{ item.label }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="sa-from">From</label>
+    <input id="sa-from" class="input" type="date" formControlName="from" />
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="sa-to">To</label>
+    <input id="sa-to" class="input" type="date" formControlName="to" />
+  </div>
+
+  @if (hasDates) {
+    <button class="btn btn-ghost clear" type="button" (click)="wholeYear()">Whole year</button>
+  } @else {
+    <button class="btn btn-ghost clear" type="button" (click)="thisMonth()">This month</button>
+  }
+</section>
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    @if (subject) {
+      <button class="btn btn-secondary btn-sm" type="button" (click)="retry()">Try again</button>
+    }
+  </div>
+}
+
+@if (!subject) {
+  <section class="card empty-state">
+    <span class="icon icon-bar-chart icon-xl"></span>
+    <h3>Choose a subject</h3>
+    <p>
+      {{
+        teacher
+          ? 'Pick one of your subjects to see how every student is attending it.'
+          : 'Pick a subject to see how every student is attending it.'
+      }}
+    </p>
+  </section>
+} @else if (report; as data) {
+  <div [class.loading]="loading">
+    <section class="card head">
+      <div class="title">
+        <h2>{{ data.subject.subject_name }}</h2>
+        <p class="text-subtle">
+          {{ data.subject.subject_code }} · {{ data.subject.program_name }} · Semester
+          {{ data.subject.semester_number }} · {{ data.subject.academic_year.name }}
+        </p>
+        @if (data.subject.teachers.length) {
+          <p class="text-subtle">Taught by {{ data.subject.teachers.join(', ') }}</p>
+        }
+        <p class="period">
+          @if (data.period.from || data.period.to) {
+            Lectures from
+            {{ data.period.from ? (data.period.from | date: 'd MMM y') : 'the start' }} to
+            {{ data.period.to ? (data.period.to | date: 'd MMM y') : 'today' }}
+          } @else {
+            Lectures of the whole academic year
+          }
+        </p>
+      </div>
+
+      <div class="downloads">
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          [class.is-loading]="downloading === 'xlsx'"
+          [disabled]="!!downloading"
+          (click)="download('xlsx')"
+        >
+          <span class="icon icon-upload icon-sm flip"></span>
+          Excel
+        </button>
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          [class.is-loading]="downloading === 'csv'"
+          [disabled]="!!downloading"
+          (click)="download('csv')"
+        >
+          <span class="icon icon-upload icon-sm flip"></span>
+          CSV
+        </button>
+      </div>
+
+      <dl class="facts">
+        <div>
+          <dt>Lectures held</dt>
+          <dd>{{ data.lectures_held }}</dd>
+        </div>
+        <div>
+          <dt>Students</dt>
+          <dd>{{ data.summary.students }}</dd>
+        </div>
+        <div>
+          <dt>Below {{ data.limit }}%</dt>
+          <dd [class.warn]="data.summary.below_limit > 0">{{ data.summary.below_limit }}</dd>
+        </div>
+        <div>
+          <dt>Average</dt>
+          <dd>
+            {{
+              data.summary.average_percentage === null
+                ? '-'
+                : (data.summary.average_percentage | number: '1.0-1') + '%'
+            }}
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="card list">
+      <div class="chips" role="group" aria-label="Which students">
+        <button
+          class="chip"
+          type="button"
+          [class.active]="!lowOnly"
+          (click)="lowOnly && toggleLowOnly()"
+        >
+          All students <span>{{ data.summary.students }}</span>
+        </button>
+        <button
+          class="chip"
+          type="button"
+          [class.active]="lowOnly"
+          (click)="!lowOnly && toggleLowOnly()"
+        >
+          Below {{ data.limit }}% <span>{{ data.summary.below_limit }}</span>
+        </button>
+      </div>
+
+      @if (students.length === 0) {
+        <div class="empty-state">
+          <span class="icon icon-users icon-xl"></span>
+          <h3>{{ lowOnly ? 'Nobody is below ' + data.limit + '%' : 'No students found' }}</h3>
+          <p>
+            {{
+              lowOnly
+                ? 'Every student with lectures is at or above the limit.'
+                : 'Students appear here once they are enrolled in the program and year of this subject.'
+            }}
+          </p>
+        </div>
+      } @else {
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Roll no.</th>
+                <th>Student</th>
+                <th>Present</th>
+                <th>Absent</th>
+                <th>Lectures</th>
+                <th>Attendance</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (student of students; track student.enrollment) {
+                <tr>
+                  <td class="nowrap">{{ student.roll_number }}</td>
+                  <td>
+                    <span class="name">{{ student.student_name }}</span>
+                    <small class="text-subtle">{{ student.username }}</small>
+                  </td>
+                  <td>{{ student.present }}</td>
+                  <td>{{ student.absent }}</td>
+                  <td>{{ student.total }}</td>
+                  <td>
+                    <div class="meter" [class.low]="student.below_limit">
+                      <span class="bar">
+                        <span [style.width.%]="student.percentage ?? 0"></span>
+                      </span>
+                      <span class="nowrap">
+                        {{
+                          student.percentage === null
+                            ? '-'
+                            : (student.percentage | number: '1.0-1') + '%'
+                        }}
+                      </span>
+                      @if (student.below_limit) {
+                        <span class="badge badge-warning">Low</span>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  </div>
+}

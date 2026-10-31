@@ -1,0 +1,153 @@
+<header class="page-banner">
+  <div>
+    <h1>My attendance</h1>
+    <p>Your attendance, overall and for each subject. Only submitted lectures are counted.</p>
+  </div>
+</header>
+
+<section class="card filters">
+  <div class="form-field">
+    <label class="form-label" for="year">Academic year</label>
+    <select id="year" class="select" [formControl]="year">
+      @if (year.value === null) {
+        <option [ngValue]="null">Current year</option>
+      }
+      @for (item of years; track item.id) {
+        <option [ngValue]="item.id">{{ item.name }}</option>
+      }
+    </select>
+  </div>
+</section>
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="retry()">Try again</button>
+  </div>
+}
+
+@if (notEnrolled) {
+  <section class="card empty-state">
+    <span class="icon icon-calendar icon-xl"></span>
+    <h3>Not enrolled in this year</h3>
+    <p>You have no attendance for the academic year you chose. Try another year.</p>
+  </section>
+}
+
+@if (summary; as data) {
+  <div [class.loading]="loading">
+    @if (!data.enrollment) {
+      <section class="card empty-state">
+        <span class="icon icon-layers icon-xl"></span>
+        <h3>You are not enrolled yet</h3>
+        <p>Your college administrator enrols you in a program. Your attendance will appear then.</p>
+      </section>
+    } @else {
+      <section class="card overview">
+        <div class="percent" [class.low]="isLow(data.overall.percentage)">
+          <strong>
+            {{ data.overall.percentage === null ? '-' : (data.overall.percentage | number: '1.0-1')
+            }}<small>{{ data.overall.percentage === null ? '' : '%' }}</small>
+          </strong>
+          <span>Overall attendance</span>
+        </div>
+
+        <dl class="facts">
+          <div>
+            <dt>Present</dt>
+            <dd>{{ data.overall.present }}</dd>
+          </div>
+          <div>
+            <dt>Absent</dt>
+            <dd>{{ data.overall.absent }}</dd>
+          </div>
+          <div>
+            <dt>Lectures</dt>
+            <dd>{{ data.overall.total }}</dd>
+          </div>
+        </dl>
+
+        <dl class="facts about">
+          <div>
+            <dt>Program</dt>
+            <dd>{{ data.enrollment.program_name }}</dd>
+          </div>
+          <div>
+            <dt>Year of study</dt>
+            <dd>Year {{ data.enrollment.year_of_study }}</dd>
+          </div>
+          <div>
+            <dt>Roll number</dt>
+            <dd>{{ data.enrollment.roll_number }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      @if (lowSubjects.length) {
+        <div class="alert alert-warning" role="status">
+          Your attendance is below {{ limit }}% in
+          {{ lowSubjects.length === 1 ? 'one subject' : lowSubjects.length + ' subjects' }}:
+          {{ lowSubjectNames }}.
+        </div>
+      }
+
+      <section class="card list">
+        @if (data.subjects.length === 0) {
+          <div class="empty-state">
+            <span class="icon icon-clipboard icon-xl"></span>
+            <h3>No lectures recorded yet</h3>
+            <p>Your subjects appear here once a teacher submits attendance.</p>
+          </div>
+        } @else {
+          <div class="table-scroll">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>Present</th>
+                  <th>Attendance</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (subject of data.subjects; track subject.subject_offering) {
+                  <tr
+                    class="clickable"
+                    tabindex="0"
+                    (click)="open(subject)"
+                    (keydown.enter)="open(subject)"
+                  >
+                    <td>
+                      <span class="subject">{{ subject.subject_name }}</span>
+                      <small class="text-subtle">
+                        {{ subject.subject_code }} ·
+                        {{ subject.subject_type === 'PRACTICAL' ? 'Practical' : 'Theory' }}
+                      </small>
+                    </td>
+                    <td class="nowrap">{{ subject.present }} / {{ subject.total }}</td>
+                    <td>
+                      <div class="meter" [class.low]="isLow(subject.percentage)">
+                        <span class="bar">
+                          <span [style.width.%]="width(subject.percentage)"></span>
+                        </span>
+                        <span class="nowrap">
+                          {{
+                            subject.percentage === null
+                              ? '-'
+                              : (subject.percentage | number: '1.0-1') + '%'
+                          }}
+                        </span>
+                        @if (isLow(subject.percentage)) {
+                          <span class="badge badge-warning">Low</span>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+  </div>
+}

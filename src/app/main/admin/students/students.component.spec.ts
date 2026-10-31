@@ -206,6 +206,7 @@ describe('StudentsComponent', () => {
         first_name: 'Riya',
         last_name: 'Shah',
         email: 'riya@college.edu',
+        roll_number: '',
         college: 1,
         date_of_birth: '2007-01-05',
         phone: '99999 00000',
@@ -216,6 +217,17 @@ describe('StudentsComponent', () => {
         queryParams: { enrol: 1 },
       });
       expect(component.showForm).toBe(false);
+    });
+
+    it('sends the roll number when one is given', () => {
+      const { component } = create();
+      component.openAdd();
+      fill(component);
+      component.form.patchValue({ roll_number: ' 78001 ' });
+
+      component.save();
+
+      expect(api['create']).toHaveBeenCalledWith(expect.objectContaining({ roll_number: '78001' }));
     });
 
     it('lets a platform administrator choose the college', () => {
@@ -257,6 +269,45 @@ describe('StudentsComponent', () => {
       });
       expect(component.showForm).toBe(true);
       expect(navigate).not.toHaveBeenCalled();
+    });
+  });
+  describe('importing students', () => {
+    it('opens the import dialog from the banner and closes it again', () => {
+      const { component, element, fixture } = create();
+      expect(element.querySelector('app-student-import-dialog')).toBeNull();
+
+      [...element.querySelectorAll<HTMLButtonElement>('.page-banner button')]
+        .find((button) => button.textContent?.includes('Import students'))!
+        .click();
+      fixture.detectChanges();
+
+      expect(component.showImport).toBe(true);
+      expect(element.querySelector('app-student-import-dialog')).not.toBeNull();
+      expect(directory['colleges']).not.toHaveBeenCalled();
+
+      component.showImport = false;
+      fixture.detectChanges();
+      expect(element.querySelector('app-student-import-dialog')).toBeNull();
+    });
+
+    it('loads the colleges for a platform administrator', () => {
+      const { component } = create([student()], undefined, null);
+
+      component.openImport();
+
+      expect(directory['colleges']).toHaveBeenCalled();
+      expect(component.colleges.map((college) => college.name)).toEqual(['College Five']);
+    });
+
+    it('shows the first page again after students were created', () => {
+      const { component } = create();
+      component.page = 3;
+      api['list'].mockClear();
+
+      component.onImported();
+
+      expect(component.page).toBe(1);
+      expect(api['list']).toHaveBeenCalledWith(expect.objectContaining({ page: 1 }));
     });
   });
 });

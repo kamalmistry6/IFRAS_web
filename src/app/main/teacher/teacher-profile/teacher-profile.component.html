@@ -1,0 +1,100 @@
+<header class="page-banner">
+  <div>
+    <h1>My profile</h1>
+    <p>Your details as your college has them. You can correct your name.</p>
+  </div>
+  <a class="btn btn-secondary" routerLink="/account/password">
+    <span class="icon icon-key icon-sm"></span>
+    Change password
+  </a>
+</header>
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="load()">Try again</button>
+  </div>
+}
+
+@if (profile; as teacher) {
+  <form class="card box" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <div class="who">
+      <span class="avatar" aria-hidden="true">{{
+        teacher.first_name[0] || teacher.username[0]
+      }}</span>
+      <div>
+        <h2>{{ teacher.full_name }}</h2>
+        <span class="text-subtle">{{ teacher.username }}</span>
+      </div>
+    </div>
+
+    @for (message of formErrors; track message) {
+      <div class="alert alert-danger" role="alert">{{ message }}</div>
+    }
+
+    <div class="two">
+      <div class="form-field">
+        <label class="form-label" for="first-name">First name</label>
+        <input id="first-name" class="input" type="text" formControlName="first_name" />
+        @if (form.controls['first_name'] | formError; as error) {
+          <p class="form-error" role="alert">{{ error }}</p>
+        }
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="last-name">Last name</label>
+        <input id="last-name" class="input" type="text" formControlName="last_name" />
+        @if (form.controls['last_name'] | formError; as error) {
+          <p class="form-error" role="alert">{{ error }}</p>
+        }
+      </div>
+    </div>
+
+    <div class="actions">
+      <button
+        class="btn btn-primary"
+        type="submit"
+        [class.is-loading]="saving"
+        [disabled]="saving || !changed"
+      >
+        Save name
+      </button>
+    </div>
+
+    <dl>
+      <div>
+        <dt>College</dt>
+        <dd>{{ college?.name || '-' }}</dd>
+      </div>
+      <div>
+        <dt>Employee ID</dt>
+        <dd>{{ teacher.employee_id || '-' }}</dd>
+      </div>
+      <div>
+        <dt>Email</dt>
+        <dd>{{ teacher.email || '-' }}</dd>
+      </div>
+      <div>
+        <dt>Phone</dt>
+        <dd>{{ teacher.phone || '-' }}</dd>
+      </div>
+      <div>
+        <dt>Date of joining</dt>
+        <dd>{{ teacher.date_of_joining ? (teacher.date_of_joining | date: 'd MMMM y') : '-' }}</dd>
+      </div>
+      <div>
+        <dt>Status</dt>
+        <dd>
+          <span class="badge" [ngClass]="teacher.is_active ? 'badge-success' : 'badge-danger'">
+            {{ teacher.is_active ? 'Active' : 'Inactive' }}
+          </span>
+        </dd>
+      </div>
+    </dl>
+
+    <p class="form-hint">
+      To change anything except your name, ask your college administrator. You can change your own
+      password at any time.
+    </p>
+  </form>
+}

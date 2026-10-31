@@ -1,0 +1,63 @@
+<header class="page-banner">
+  <div>
+    <h1>My profile</h1>
+    <p>Your details as your college has them.</p>
+  </div>
+  <a class="btn btn-secondary" routerLink="/account/password">
+    <span class="icon icon-key icon-sm"></span>
+    Change password
+  </a>
+</header>
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="load()">Try again</button>
+  </div>
+}
+
+@if (profile; as student) {
+  <section class="card details">
+    <div class="who">
+      <span class="avatar" aria-hidden="true">{{
+        student.first_name[0] || student.username[0]
+      }}</span>
+      <div>
+        <h2>{{ student.full_name }}</h2>
+        <span class="text-subtle">{{ student.username }}</span>
+      </div>
+    </div>
+
+    <dl>
+      <div>
+        <dt>College</dt>
+        <dd>{{ college?.name || '-' }}</dd>
+      </div>
+      <div>
+        <dt>Roll number</dt>
+        <dd>{{ student.roll_number || '-' }}</dd>
+      </div>
+      <div>
+        <dt>Email</dt>
+        <dd>{{ student.email || '-' }}</dd>
+      </div>
+      <div>
+        <dt>Phone</dt>
+        <dd>{{ student.phone || '-' }}</dd>
+      </div>
+      <div>
+        <dt>Date of birth</dt>
+        <dd>{{ student.date_of_birth ? (student.date_of_birth | date: 'd MMMM y') : '-' }}</dd>
+      </div>
+      <div class="wide">
+        <dt>Address</dt>
+        <dd>{{ student.address || '-' }}</dd>
+      </div>
+    </dl>
+
+    <p class="form-hint">
+      To correct your name or contact details, ask your college administrator. You can change your
+      own password at any time.
+    </p>
+  </section>
+}

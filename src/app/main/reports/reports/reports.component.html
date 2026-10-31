@@ -1,0 +1,38 @@
+<header class="page-banner">
+  <div>
+    <h1>Reports</h1>
+    <p>
+      {{
+        tabs.length > 1
+          ? 'How students are attending. Only submitted lectures are counted. Every report can be downloaded.'
+          : 'How the students of your subjects are attending. Only submitted lectures are counted.'
+      }}
+    </p>
+  </div>
+</header>
+
+@if (tabs.length > 1) {
+  <nav class="tabs" aria-label="Reports">
+    @for (tab of tabs; track tab.key) {
+      <button
+        type="button"
+        class="tab"
+        [class.active]="tab === current"
+        [attr.aria-current]="tab === current ? 'page' : null"
+        (click)="choose(tab)"
+      >
+        {{ tab.label }}
+      </button>
+    }
+  </nav>
+}
+
+<!-- A new report for each tab, so its filters start fresh. -->
+@switch (current.key) {
+  @case ('subject') {
+    <app-subject-attendance-report></app-subject-attendance-report>
+  }
+  @case ('defaulters') {
+    <app-defaulters-report></app-defaulters-report>
+  }
+}

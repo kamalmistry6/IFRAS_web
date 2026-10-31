@@ -90,24 +90,12 @@
   font-weight: 700;
 }
 
-.menu-head {
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-  font-size: var(--text-sm);
-
-  span {
-    color: var(--color-text-subtle);
-  }
-}
-
 // The user dropdown.
 .menu {
   position: absolute;
   top: calc(100% + var(--space-2));
   right: 0;
-  min-width: 15rem;
+  min-width: 10rem;
   overflow: hidden;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -127,6 +115,7 @@
     font-size: var(--text-sm);
     text-align: left;
     text-decoration: none;
+    white-space: nowrap;
     cursor: pointer;
 
     &:hover {

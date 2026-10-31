@@ -64,6 +64,13 @@ jobs:
           printf '%s\n' "$DEPLOY_SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           if ! ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null 2>&1; then
+            first="$(head -n1 ~/.ssh/deploy_key | cut -c1-12)"
+            case "$first" in
+              "-----BEGIN "*) kind="starts with a private key header, so it is cut short or has a passphrase" ;;
+              ssh-*) kind="looks like the PUBLIC key (.pub), not the private file" ;;
+              *) kind="does not start with the -----BEGIN line (the top of the file is missing)" ;;
+            esac
+            echo "The secret has $(wc -l < ~/.ssh/deploy_key) line(s) and $kind."
             echo "::error::The DEPLOY_SSH_KEY secret is not a usable private key. Paste the whole private file (from BEGIN to END), made without a passphrase."
             exit 1
           fi

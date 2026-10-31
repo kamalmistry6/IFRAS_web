@@ -4,4 +4,5 @@ export * from './directory.service';
 export * from './assignments.service';
 export * from './teachers.service';
 export * from './students.service';
+export * from './reports.service';
 export * from './academics.service';

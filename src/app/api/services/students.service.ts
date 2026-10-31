@@ -6,6 +6,7 @@ import {
   ListQuery,
   Page,
   StudentCreate,
+  StudentImportResult,
   StudentEnrollment,
   StudentProfile,
   StudentUpdate,
@@ -31,6 +32,29 @@ export class StudentsService {
 
   create(student: StudentCreate): Observable<StudentProfile> {
     return this.api.post<StudentProfile>('/students/', student);
+  }
+
+  /**
+   * Creates students from a spreadsheet (.xlsx, .xls or .csv). With `dryRun` nothing is created: the
+   * rows are only checked. The first password of each student is their roll number.
+   * A platform administrator must give the `college`.
+   */
+  importStudents(
+    file: File,
+    dryRun: boolean,
+    college?: number | null,
+  ): Observable<StudentImportResult> {
+    const body = new FormData();
+    body.append('file', file);
+    body.append('dry_run', String(dryRun));
+    if (college) body.append('college', String(college));
+
+    return this.api.post<StudentImportResult>('/students/import/', body);
+  }
+
+  /** The empty Excel file to fill in for an import. */
+  importTemplate(): Observable<Blob> {
+    return this.api.getBlob('/students/import/template/');
   }
 
   /** An administrator can correct the name. The email and username cannot be changed. */

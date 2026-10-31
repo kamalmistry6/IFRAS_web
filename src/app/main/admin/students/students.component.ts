@@ -41,6 +41,9 @@ export class StudentsComponent implements OnInit, OnDestroy {
   years: AcademicYear[] = [];
   programs: Program[] = [];
 
+  // The "import students" dialog
+  showImport = false;
+
   // The "add student" dialog
   showForm = false;
   form: FormGroup;
@@ -74,6 +77,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
       username: ['', [Validators.required]],
       password: ['', [Validators.required, Validators.minLength(8)]],
       email: ['', [Validators.email]],
+      roll_number: [''],
       college: [null as number | null],
       date_of_birth: [''],
       phone: [''],
@@ -171,6 +175,22 @@ export class StudentsComponent implements OnInit, OnDestroy {
     this.router.navigate(['/admin/students', student.public_id]);
   }
 
+  // ---- Import --------------------------------------------------------------------------
+
+  openImport(): void {
+    this.showImport = true;
+
+    if (this.mustChooseCollege && this.colleges.length === 0) {
+      this.directory.colleges().subscribe((page) => (this.colleges = page.results));
+    }
+  }
+
+  /** Students were created: show them. */
+  onImported(): void {
+    this.page = 1;
+    this.reload$.next();
+  }
+
   // ---- Add -----------------------------------------------------------------------------
 
   openAdd(): void {
@@ -182,6 +202,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
       username: '',
       password: '',
       email: '',
+      roll_number: '',
       college: this.auth.user?.college?.id ?? null,
       date_of_birth: '',
       phone: '',
@@ -234,6 +255,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
         first_name: value.first_name.trim(),
         last_name: value.last_name.trim(),
         email: value.email.trim(),
+        roll_number: value.roll_number.trim(),
         college: value.college,
         date_of_birth: value.date_of_birth || null,
         phone: value.phone.trim(),

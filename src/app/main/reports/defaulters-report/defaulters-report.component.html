@@ -1,0 +1,200 @@
+<section class="card filters" [formGroup]="filters">
+  <div class="input-group search">
+    <span class="icon icon-search input-icon"></span>
+    <input
+      type="search"
+      formControlName="search"
+      placeholder="Search name, username or roll number"
+      aria-label="Search students"
+    />
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="df-year">Academic year</label>
+    <select id="df-year" class="select" formControlName="year">
+      @for (year of years; track year.id) {
+        <option [ngValue]="year.id">{{ year.name }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="form-field narrow">
+    <label class="form-label" for="df-below">Below (%)</label>
+    <input
+      id="df-below"
+      class="input"
+      type="number"
+      min="1"
+      max="100"
+      step="1"
+      formControlName="below"
+    />
+  </div>
+
+  @if (mustChooseCollege) {
+    <div class="form-field">
+      <label class="form-label" for="df-college">College</label>
+      <select id="df-college" class="select" formControlName="college">
+        <option value="">All colleges</option>
+        @for (college of colleges; track college.id) {
+          <option [value]="college.id">{{ college.name }}</option>
+        }
+      </select>
+    </div>
+  }
+
+  <div class="form-field">
+    <label class="form-label" for="df-program">Program</label>
+    <select id="df-program" class="select" formControlName="program">
+      <option value="">All programs</option>
+      @for (program of programs; track program.id) {
+        <option [value]="program.id">{{ program.name }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="form-field narrow">
+    <label class="form-label" for="df-study">Year of study</label>
+    <select id="df-study" class="select" formControlName="yearOfStudy">
+      <option value="">Any</option>
+      @for (year of yearOptions; track year) {
+        <option [value]="year">Year {{ year }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="df-subject">Subject</label>
+    <select id="df-subject" class="select" formControlName="subject">
+      <option value="">All subjects together</option>
+      @for (item of subjects; track item.id) {
+        <option [value]="item.id">
+          {{ item.subject_name }} ({{ item.subject_code }}) · {{ item.program_name }}
+        </option>
+      }
+    </select>
+  </div>
+
+  <div class="form-field narrow">
+    <label class="form-label" for="df-from">From</label>
+    <input id="df-from" class="input" type="date" formControlName="from" />
+  </div>
+
+  <div class="form-field narrow">
+    <label class="form-label" for="df-to">To</label>
+    <input id="df-to" class="input" type="date" formControlName="to" />
+  </div>
+
+  @if (hasDates) {
+    <button class="btn btn-ghost clear" type="button" (click)="wholeYear()">Whole year</button>
+  }
+  @if (hasFilters) {
+    <button class="btn btn-ghost clear" type="button" (click)="clearFilters()">Clear</button>
+  }
+</section>
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="retry()">Try again</button>
+  </div>
+}
+
+@if (report; as data) {
+  <section class="card list" [class.loading]="loading">
+    <div class="bar-top">
+      <p class="summary">
+        <strong>{{ data.count }}</strong>
+        {{ data.count === 1 ? 'student is' : 'students are' }} below {{ data.below }}% in
+        {{ data.academic_year.name }}.
+        <span class="text-subtle">
+          @if (data.period.from || data.period.to) {
+            Lectures from
+            {{ data.period.from ? (data.period.from | date: 'd MMM y') : 'the start' }} to
+            {{ data.period.to ? (data.period.to | date: 'd MMM y') : 'today' }}.
+          } @else {
+            Lectures of the whole academic year.
+          }
+        </span>
+      </p>
+
+      <div class="downloads">
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          [class.is-loading]="downloading === 'xlsx'"
+          [disabled]="!!downloading || data.count === 0"
+          (click)="download('xlsx')"
+        >
+          <span class="icon icon-upload icon-sm flip"></span>
+          Excel
+        </button>
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          [class.is-loading]="downloading === 'csv'"
+          [disabled]="!!downloading || data.count === 0"
+          (click)="download('csv')"
+        >
+          <span class="icon icon-upload icon-sm flip"></span>
+          CSV
+        </button>
+      </div>
+    </div>
+
+    @if (data.count === 0) {
+      <div class="empty-state">
+        <span class="icon icon-check-circle icon-xl"></span>
+        <h3>Nobody is below {{ data.below }}%</h3>
+        <p>
+          {{
+            hasFilters
+              ? 'Try a higher percentage or clear the filters.'
+              : 'Every student with lectures is at or above the limit, or no lecture has been submitted yet.'
+          }}
+        </p>
+      </div>
+    } @else {
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Roll no.</th>
+              <th>Student</th>
+              <th>Program</th>
+              <th>Present</th>
+              <th>Attendance</th>
+              <th>Low in</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (student of data.students; track student.enrollment) {
+              <tr>
+                <td class="nowrap">{{ student.roll_number }}</td>
+                <td>
+                  <span class="name">{{ student.student_name }}</span>
+                  <small class="text-subtle">{{ student.username }}</small>
+                </td>
+                <td>
+                  {{ student.program_name }}
+                  <small class="text-subtle">Year {{ student.year_of_study }}</small>
+                </td>
+                <td class="nowrap">{{ student.present }} / {{ student.total }}</td>
+                <td>
+                  <div class="meter">
+                    <span class="bar"><span [style.width.%]="student.percentage"></span></span>
+                    <span class="nowrap">{{ student.percentage | number: '1.0-1' }}%</span>
+                  </div>
+                </td>
+                <td class="nowrap">
+                  {{ student.subjects_below }}
+                  {{ student.subjects_below === 1 ? 'subject' : 'subjects' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}

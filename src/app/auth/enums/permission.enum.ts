@@ -38,6 +38,11 @@ export enum AppPermission {
   ATTENDANCE_CORRECT_ANY_TIME = 'attendance.correct.any.time',
   MY_ATTENDANCE_VIEW = 'my.attendance.view',
 
+  // Reports
+  REPORTS_VIEW = 'reports.view',
+  /** The list of students under a percentage: administrators only. */
+  REPORTS_DEFAULTERS = 'reports.defaulters',
+
   // Account
   PASSWORD_CHANGE = 'account.password.change',
 }
@@ -61,6 +66,8 @@ export const ROLE_PERMISSIONS: Record<UserType, readonly AppPermission[]> = {
     P.ATTENDANCE_SESSIONS_VIEW,
     P.ATTENDANCE_CORRECT,
     P.ATTENDANCE_CORRECT_ANY_TIME,
+    P.REPORTS_VIEW,
+    P.REPORTS_DEFAULTERS,
     P.PASSWORD_CHANGE,
   ],
   [UserType.ADMIN]: [
@@ -77,6 +84,8 @@ export const ROLE_PERMISSIONS: Record<UserType, readonly AppPermission[]> = {
     P.ATTENDANCE_SESSIONS_VIEW,
     P.ATTENDANCE_CORRECT,
     P.ATTENDANCE_CORRECT_ANY_TIME,
+    P.REPORTS_VIEW,
+    P.REPORTS_DEFAULTERS,
     P.PASSWORD_CHANGE,
   ],
   [UserType.TEACHER]: [
@@ -87,6 +96,7 @@ export const ROLE_PERMISSIONS: Record<UserType, readonly AppPermission[]> = {
     P.ATTENDANCE_TAKE,
     P.ATTENDANCE_SESSIONS_VIEW,
     P.ATTENDANCE_CORRECT,
+    P.REPORTS_VIEW,
     P.TEACHER_PROFILE_EDIT,
     P.PASSWORD_CHANGE,
   ],

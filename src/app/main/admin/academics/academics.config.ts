@@ -51,6 +51,12 @@ export interface FieldConfig {
   lookupQuery?: (values: Record<string, unknown>) => ListQuery | null;
   /** Load the choices again when one of these fields changes. */
   reloadOn?: string[];
+  /** Leave out the choices that already exist in another list (the subjects already offered). */
+  exclude?: {
+    resource: string;
+    query: (values: Record<string, unknown>) => ListQuery;
+    id: (row: Row) => unknown;
+  };
   /** A select of semester numbers 1 to twice the program's years, without the ones already used. */
   special?: 'semesterNumber';
   /** Only helps to pick another field (the program that narrows the subjects). Never sent. */
@@ -342,7 +348,19 @@ export const RESOURCES: ResourceConfig[] = [
         lookup: 'programs',
         required: true,
         helper: true,
+        hint: 'Narrows the semesters below.',
+      },
+      {
+        name: 'semester',
+        label: 'Semester',
+        kind: 'select',
+        lookup: 'semesters',
+        required: true,
+        helper: true,
+        reloadOn: ['program'],
         hint: 'Narrows the subjects below.',
+        lookupQuery: (values) =>
+          values['program'] ? { program: values['program'] as number } : null,
       },
       {
         name: 'subject',
@@ -351,12 +369,22 @@ export const RESOURCES: ResourceConfig[] = [
         lookup: 'subjects',
         required: true,
         parent: true,
-        reloadOn: ['program'],
+        // Changing the program clears the semester, which clears this one in turn.
+        reloadOn: ['semester', 'academic_year'],
+        hint: 'Subjects already offered in this academic year are not listed.',
         display: (row) => `${row.subject_name} (${row.subject_code})`,
         lookupQuery: (values) =>
-          values['program']
-            ? { semester__program: values['program'] as number, is_active: true }
+          values['semester'] && values['academic_year']
+            ? { semester: values['semester'] as number, is_active: true }
             : null,
+        exclude: {
+          resource: 'subject-offerings',
+          query: (values) => ({
+            academic_year: values['academic_year'] as number,
+            subject__semester: values['semester'] as number,
+          }),
+          id: (row) => row.subject,
+        },
       },
     ],
   },

@@ -107,6 +107,7 @@ export class EnrollmentDialogComponent implements OnInit, OnDestroy {
       this.form.controls['academic_year'].disable({ emitEvent: false });
     } else if (this.student) {
       this.form.patchValue({ student: this.student.id });
+      this.suggestRollNumber(this.student);
     }
 
     this.directory.academicYears().subscribe((page) => {
@@ -151,6 +152,12 @@ export class EnrollmentDialogComponent implements OnInit, OnDestroy {
     this.candidates = [];
     this.studentSearch.setValue('', { emitEvent: false });
     this.form.patchValue({ student: student.id });
+    this.suggestRollNumber(student);
+  }
+
+  /** Fills in the roll number the student was added with. The admin can still change it. */
+  private suggestRollNumber(student: StudentProfile): void {
+    if (student.roll_number) this.form.patchValue({ roll_number: student.roll_number });
   }
 
   clearChoice(): void {
