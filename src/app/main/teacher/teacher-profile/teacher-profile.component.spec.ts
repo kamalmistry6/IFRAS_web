@@ -19,6 +19,9 @@ const profile = (overrides: Partial<TeacherProfile> = {}): TeacherProfile =>
     full_name: 'Amit Patil',
     email: 'amit@example.com',
     college: 1,
+    department: null,
+    department_name: '',
+    is_head: false,
     employee_id: 'EMP001',
     phone: '9876543210',
     date_of_joining: '2020-06-15',
@@ -80,7 +83,22 @@ describe('TeacherProfileComponent', () => {
     const values = [...element.querySelectorAll('dd')].map((dd) => dd.textContent?.trim());
 
     expect(values).toContain('Inactive');
-    expect(values.filter((value) => value === '-').length).toBe(3);
+    expect(values.filter((value) => value === '-').length).toBe(4);
+  });
+
+  it('shows the department, and says so when the teacher is its head', () => {
+    const plain = create(profile({ department: 7, department_name: 'Information Technology' }));
+
+    expect(plain.element.textContent).toContain('Information Technology');
+    expect(plain.element.textContent).not.toContain('Head of department');
+  });
+
+  it('shows the Head of department badge for the head', () => {
+    const { element } = create(
+      profile({ department: 7, department_name: 'Information Technology', is_head: true }),
+    );
+
+    expect(element.textContent).toContain('Head of department');
   });
 
   it('puts the saved name in the two boxes, and only those can be edited', () => {

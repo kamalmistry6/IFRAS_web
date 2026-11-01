@@ -104,6 +104,11 @@ export interface TeacherProfile {
   /** Read only. */
   email: string;
   college: number;
+  /** The department the teacher works in, or null. */
+  department: number | null;
+  department_name: string;
+  /** True for the head of the teacher's department (HOD). */
+  is_head: boolean;
   employee_id: string;
   phone: string;
   date_of_joining: ApiDate | null;
@@ -119,17 +124,29 @@ export interface TeacherCreate {
   last_name: string;
   email?: string;
   college: number;
+  /** A head of department's new teachers always go to their own department. */
+  department?: number | null;
   employee_id: string;
   phone?: string;
   date_of_joining?: ApiDate | null;
   is_active?: boolean;
 }
 
-/** What an administrator can edit. */
+/**
+ * What an administrator can edit. `department` and `is_head` are for administrators only: the
+ * server ignores them from a head of department. Moving or deactivating a head must send `is_head`.
+ */
 export type TeacherUpdate = Partial<
   Pick<
     TeacherProfile,
-    'first_name' | 'last_name' | 'employee_id' | 'phone' | 'date_of_joining' | 'is_active'
+    | 'first_name'
+    | 'last_name'
+    | 'employee_id'
+    | 'phone'
+    | 'date_of_joining'
+    | 'is_active'
+    | 'department'
+    | 'is_head'
   >
 >;
 

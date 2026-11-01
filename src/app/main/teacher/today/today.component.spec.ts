@@ -140,7 +140,7 @@ describe('TodayComponent', () => {
 
     fixture.componentInstance.changeDate('2026-10-20');
 
-    expect(attendance['today']).toHaveBeenLastCalledWith('2026-10-20');
+    expect(attendance['today']).toHaveBeenLastCalledWith('2026-10-20', 'own');
   });
 
   describe('extra lecture', () => {

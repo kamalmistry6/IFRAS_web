@@ -4,6 +4,7 @@ import { of, throwError } from 'rxjs';
 import { Program, StudentEnrollment } from 'src/app/api/models';
 import { DirectoryService, StudentsService } from 'src/app/api/services';
 import { GlobalException } from 'src/app/core/exceptions';
+import { AuthService } from 'src/app/auth/services';
 import { ToastService } from 'src/app/core/services';
 import { AdminModule } from '../admin.module';
 import { EnrollmentsComponent } from './enrollments.component';
@@ -39,7 +40,7 @@ const page = <T>(results: T[], count = results.length) => ({
 describe('EnrollmentsComponent', () => {
   let api: Record<string, ReturnType<typeof vi.fn>>;
 
-  function create(rows: StudentEnrollment[] = [enrollment()], count?: number) {
+  function create(rows: StudentEnrollment[] = [enrollment()], count?: number, canManage = true) {
     api = {
       enrollments: vi.fn().mockReturnValue(of(page(rows, count))),
       list: vi.fn().mockReturnValue(of(page([]))),
@@ -60,6 +61,7 @@ describe('EnrollmentsComponent', () => {
           },
         },
         { provide: ToastService, useValue: { success: vi.fn() } },
+        { provide: AuthService, useValue: { user: null, isAuthorizedNow: () => canManage } },
       ],
     });
 
@@ -197,5 +199,32 @@ describe('EnrollmentsComponent', () => {
     fixture.detectChanges();
 
     expect(element.querySelector('.alert')?.textContent).toContain('Cannot reach the server.');
+  });
+  describe('for a head of department, who only looks', () => {
+    it('lists the enrollments with no enrol button and no edit buttons', () => {
+      const { component, element } = create([enrollment()], undefined, false);
+
+      expect(component.canManage).toBe(false);
+      expect(element.querySelector('.page-banner button')).toBeNull();
+      expect(element.querySelector('tbody')?.textContent).toContain('78012');
+      expect(element.querySelector('tbody button')).toBeNull();
+    });
+
+    it('does not open the edit dialog from a click on a row', () => {
+      const { component, element, fixture } = create([enrollment()], undefined, false);
+
+      element.querySelector<HTMLElement>('tbody tr')!.click();
+      fixture.detectChanges();
+
+      expect(component.showDialog).toBe(false);
+      expect(element.querySelector('tbody tr.clickable')).toBeNull();
+    });
+
+    it('explains an empty list without an enrol button', () => {
+      const { element } = create([], 0, false);
+
+      expect(element.textContent).toContain('program of your department');
+      expect(element.querySelector('.empty-state button')).toBeNull();
+    });
   });
 });

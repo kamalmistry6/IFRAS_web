@@ -12,7 +12,7 @@ Read `FRONTEND_GUIDE.md` in the API repository first ([IFRAS_api/docs/FRONTEND_G
 
 Pages are numbered by user type: **C** common, **T** teacher, **A** admin, **ST** student.
 
-**Where each user lands after login** (from `GET /auth/me/`): Teacher to `/teacher/today`, Admin and Super admin to `/admin/dashboard`, Student to `/student/attendance`.
+**Where each user lands after login** (from `GET /auth/me/`): Teacher to `/teacher/today`, Admin, Super admin and Head of department (HOD) to `/admin/dashboard`, Student to `/student/attendance`.
 
 **Build status (2026-10-31).** Where the app differs from the suggestions below: forms are **dialogs** on their list page (not separate `/new` routes) except the student's own page, and A10 is one page with a tab per resource.
 
@@ -27,7 +27,7 @@ Pages are numbered by user type: **C** common, **T** teacher, **A** admin, **ST*
 | T5 My timetable | `/teacher/timetable` | built |
 | T6 My profile | `/teacher/profile` (from the user menu) | built |
 | Teacher dashboard | `/teacher/dashboard` shows "coming soon" | not built |
-| A1 Admin dashboard | `/admin/dashboard` shows "coming soon" | not built |
+| A1 Dashboard (admin, super admin, HOD) | `/admin/dashboard` | built. For an HOD the numbers are their department's; students and enrollments are read-only for them; the sidebar has "My teaching" and "Department" groups |
 | A2, A3, A4 Students (list, add dialog, detail page) | `/admin/students`, `/admin/students/:id` | built |
 | A5 Enrollments | `/admin/enrollments` | built |
 | A6 Teachers | `/admin/teachers` | built |
@@ -233,11 +233,7 @@ An `ADMIN` sees and changes only their own college (`college.id` from `/auth/me/
 
 | When | Call | Used for |
 |---|---|---|
-| On load | `GET /attendance/today/` | Every lecture in the college today, with `teacher_name` and `state`. Count how many are `NOT_STARTED`, `OPEN` and `SUBMITTED` |
-| On load | `GET /students/?page_size=1`, `GET /teachers/?page_size=1` | Read only `count` for the totals |
-| On load | `GET /attendance/sessions/?page_size=10` | Recent sessions |
-
-There is no statistics endpoint yet (G9), so keep the dashboard simple. Cards: total students, total teachers, today's lectures by state, recent sessions.
+| On load | `GET /reports/dashboard/` | Totals, today's lectures by state, this month's attendance and defaulters, the 10 latest sessions. The scope (college, platform or department) follows the user. `?month=YYYY-MM` (the month box) changes the attendance numbers. Drawn with Chart.js (`app-chart`, in the admin module only): a line chart of attendance by day against the limit, a ring for the month, a ring for today's lectures and bars for the lowest subjects. Cards: totals, needs attention today, teachers behind (last 7 days), today's lectures, attendance of the month against the month before, lowest subjects, latest sessions |
 
 ### A2. Students list
 

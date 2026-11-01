@@ -13,6 +13,7 @@ import {
 } from 'rxjs';
 import { AcademicYear, College, Program, StudentProfile } from 'src/app/api/models';
 import { DirectoryService, StudentsService } from 'src/app/api/services';
+import { AppPermission } from 'src/app/auth/enums';
 import { AuthService } from 'src/app/auth/services';
 import { GlobalException } from 'src/app/core/exceptions';
 import { ToastService } from 'src/app/core/services';
@@ -151,6 +152,14 @@ export class StudentsComponent implements OnInit, OnDestroy {
       : Math.max(4, ...this.programs.map((item) => item.duration_years));
 
     return Array.from({ length }, (_, index) => index + 1);
+  }
+
+  /**
+   * Administrators add, import and edit students. A head of department only looks at the students
+   * of their department, so the buttons are not shown to them.
+   */
+  get canManage(): boolean {
+    return this.auth.isAuthorizedNow({ permissions: [AppPermission.STUDENTS_MANAGE] });
   }
 
   get mustChooseCollege(): boolean {

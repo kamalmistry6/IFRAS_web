@@ -77,7 +77,8 @@ export class TodayComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    this.attendance.today(this.date).subscribe({
+    // 'own': a head of department's own lectures, not the whole department's.
+    this.attendance.today(this.date, 'own').subscribe({
       next: (response) => {
         this.lectures = response.lectures;
         this.loading = false;

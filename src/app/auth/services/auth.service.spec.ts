@@ -22,6 +22,7 @@ const teacher: CurrentUser = {
   is_super_admin: false,
   college: { id: 1, public_id: 'c-1', name: 'SDSM College', code: '225' },
   must_change_password: false,
+  hod_department: null,
   student_profile_public_id: null,
   teacher_profile_public_id: 't-1',
 };

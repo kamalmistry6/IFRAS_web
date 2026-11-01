@@ -93,6 +93,12 @@ nav {
   flex: 1;
   margin-top: var(--space-2);
   overflow-y: auto;
+  // Still scrolls, but without a visible bar.
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 ul {
@@ -107,7 +113,6 @@ ul {
 .sub {
   margin: var(--space-1) 0 0 var(--space-5);
   padding-left: var(--space-3);
-  border-left: 1px solid var(--sidebar-line);
 }
 
 // Menu links, parent buttons and Logout all look the same.

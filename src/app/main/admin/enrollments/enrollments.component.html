@@ -7,10 +7,12 @@
     </p>
   </div>
 
-  <button class="btn btn-secondary" type="button" (click)="openEnrol()">
-    <span class="icon icon-plus icon-sm"></span>
-    Enrol student
-  </button>
+  @if (canManage) {
+    <button class="btn btn-secondary" type="button" (click)="openEnrol()">
+      <span class="icon icon-plus icon-sm"></span>
+      Enrol student
+    </button>
+  }
 </header>
 
 <section class="card filters" [formGroup]="filters">
@@ -85,10 +87,12 @@
         {{
           hasFilters
             ? 'Try another search or clear the filters.'
-            : 'Enrol a student to get started.'
+            : canManage
+              ? 'Enrol a student to get started.'
+              : 'Enrollments appear here once students are enrolled in a program of your department.'
         }}
       </p>
-      @if (!hasFilters) {
+      @if (!hasFilters && canManage) {
         <button class="btn btn-primary" type="button" (click)="openEnrol()">Enrol student</button>
       }
     </div>
@@ -108,7 +112,7 @@
         </thead>
         <tbody>
           @for (item of enrollments; track item.public_id) {
-            <tr class="clickable" (click)="openEdit(item)">
+            <tr [class.clickable]="canManage" (click)="canManage && openEdit(item)">
               <td>
                 <a
                   class="student"
@@ -130,13 +134,15 @@
                 </span>
               </td>
               <td class="actions">
-                <button
-                  class="btn btn-secondary btn-sm"
-                  type="button"
-                  (click)="openEdit(item); $event.stopPropagation()"
-                >
-                  Edit
-                </button>
+                @if (canManage) {
+                  <button
+                    class="btn btn-secondary btn-sm"
+                    type="button"
+                    (click)="openEdit(item); $event.stopPropagation()"
+                  >
+                    Edit
+                  </button>
+                }
               </td>
             </tr>
           }

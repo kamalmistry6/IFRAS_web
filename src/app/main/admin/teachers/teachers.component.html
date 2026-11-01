@@ -64,6 +64,7 @@
         <thead>
           <tr>
             <th>Teacher</th>
+            <th>Department</th>
             <th>Employee ID</th>
             <th>Phone</th>
             <th>Joined</th>
@@ -77,6 +78,16 @@
               <td>
                 <strong>{{ teacher.full_name }}</strong>
                 <small class="text-subtle">{{ teacher.username }}</small>
+              </td>
+              <td>
+                @if (teacher.department) {
+                  {{ teacher.department_name }}
+                  @if (teacher.is_head) {
+                    <span class="badge badge-primary">Head</span>
+                  }
+                } @else {
+                  <span class="text-subtle">-</span>
+                }
               </td>
               <td>{{ teacher.employee_id }}</td>
               <td>{{ teacher.phone || '-' }}</td>
@@ -245,6 +256,36 @@
               }
             </div>
           }
+        }
+
+        @if (canAssignDepartment) {
+          <div class="form-field">
+            <label class="form-label" for="t-department">Department (optional)</label>
+            <select id="t-department" class="select" formControlName="department">
+              <option [ngValue]="null">No department</option>
+              @for (department of departmentChoices; track department.id) {
+                <option [ngValue]="department.id">{{ department.name }}</option>
+              }
+            </select>
+            @if (form.controls['department'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          </div>
+
+          @if (form.value.department) {
+            <label class="check">
+              <input type="checkbox" formControlName="is_head" />
+              Head of department
+            </label>
+            @if (form.value.is_head && otherHead) {
+              <p class="form-hint">This replaces the current head, {{ otherHead }}.</p>
+            }
+            @if (form.controls['is_head'] | formError; as error) {
+              <p class="form-error">{{ error }}</p>
+            }
+          }
+        } @else if (!editing) {
+          <p class="form-hint">The teacher is added to your department.</p>
         }
 
         <div class="two">

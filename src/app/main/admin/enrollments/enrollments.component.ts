@@ -12,6 +12,8 @@ import {
 } from 'rxjs';
 import { AcademicYear, EnrollmentStatus, Program, StudentEnrollment } from 'src/app/api/models';
 import { DirectoryService, StudentsService } from 'src/app/api/services';
+import { AppPermission } from 'src/app/auth/enums';
+import { AuthService } from 'src/app/auth/services';
 import { GlobalException } from 'src/app/core/exceptions';
 import { PAGE_SIZE, PageRange, pageRange } from 'src/app/shared/utils';
 import {
@@ -56,6 +58,7 @@ export class EnrollmentsComponent implements OnInit, OnDestroy {
     fb: FormBuilder,
     private students: StudentsService,
     private directory: DirectoryService,
+    private auth: AuthService,
   ) {
     this.filters = fb.nonNullable.group({
       search: '',
@@ -146,6 +149,11 @@ export class EnrollmentsComponent implements OnInit, OnDestroy {
 
   retry(): void {
     this.reload$.next();
+  }
+
+  /** Administrators enrol and edit. A head of department only looks at their department's enrollments. */
+  get canManage(): boolean {
+    return this.auth.isAuthorizedNow({ permissions: [AppPermission.ENROLLMENTS_MANAGE] });
   }
 
   openEnrol(): void {

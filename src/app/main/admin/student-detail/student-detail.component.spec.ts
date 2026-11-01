@@ -4,6 +4,7 @@ import { of, throwError } from 'rxjs';
 import { StudentEnrollment, StudentProfile } from 'src/app/api/models';
 import { DirectoryService, StudentsService } from 'src/app/api/services';
 import { GlobalException } from 'src/app/core/exceptions';
+import { AuthService } from 'src/app/auth/services';
 import { ToastService } from 'src/app/core/services';
 import { AdminModule } from '../admin.module';
 import { StudentDetailComponent } from './student-detail.component';
@@ -44,6 +45,7 @@ describe('StudentDetailComponent', () => {
     enrollments: StudentEnrollment[] = [enrollment],
     query: Record<string, string> = {},
     getResult: unknown = of(student),
+    canManage = true,
   ) {
     api = {
       get: vi.fn().mockReturnValue(getResult),
@@ -65,6 +67,10 @@ describe('StudentDetailComponent', () => {
           },
         },
         { provide: ToastService, useValue: toast },
+        {
+          provide: AuthService,
+          useValue: { user: null, isAuthorizedNow: () => canManage },
+        },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -199,5 +205,30 @@ describe('StudentDetailComponent', () => {
 
     expect(element.querySelector('.alert')?.textContent).toContain('This student does not exist.');
     expect(api['enrollments']).not.toHaveBeenCalled();
+  });
+  describe('for a head of department, who only looks', () => {
+    it('shows the profile but lets nothing be edited or saved', () => {
+      const { component, element } = create([enrollment], {}, of(student), false);
+
+      expect(component.canManage).toBe(false);
+      expect(component.form.disabled).toBe(true);
+      expect(element.querySelector('button[type="submit"]')).toBeNull();
+      expect(element.textContent).toContain('Only the college administrator changes');
+      expect(element.textContent).toContain(student.full_name);
+    });
+
+    it('lists the enrollments without enrol or edit buttons', () => {
+      const { component, element } = create([enrollment], {}, of(student), false);
+
+      expect(component.canEnrol).toBe(false);
+      expect(element.querySelector('.enrollments .list')?.textContent).toContain('78012');
+      expect(element.querySelector('.enrollments button')).toBeNull();
+    });
+
+    it('does not open the enrol dialog by itself, even when the address asks for it', () => {
+      const { component } = create([], { enrol: '1' }, of(student), false);
+
+      expect(component.showEnrollment).toBe(false);
+    });
   });
 });

@@ -135,6 +135,7 @@ describe('SessionsListComponent', () => {
       date__lte: '',
       status: 'OPEN',
       teacher_assignment: '4',
+      scope: 'own',
     });
     expect(component.page).toBe(1);
   });

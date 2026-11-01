@@ -24,6 +24,9 @@ export interface Department {
   code: string;
   description: string;
   is_active: boolean;
+  /** The head of department (a teacher's id), or null. Chosen on the teacher, so read only here. */
+  head: number | null;
+  head_name: string;
 }
 
 export type DepartmentCreate = Pick<Department, 'college' | 'name' | 'code'> &

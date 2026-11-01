@@ -162,6 +162,8 @@ export class SessionsListComponent implements OnInit, OnDestroy {
       date__lte: to,
       status,
       teacher_assignment: subject,
+      // My sessions: a head of department's own teaching, not the whole department's.
+      scope: this.admin ? undefined : 'own',
     };
   }
 }

@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import {
   AcademicYear,
   College,
+  Department,
   ListQuery,
   Page,
   Program,
@@ -28,6 +29,14 @@ export class DirectoryService {
   /** Every college (for a platform administrator choosing where to create someone). */
   colleges(): Observable<Page<College>> {
     return this.api.get<Page<College>>('/academics/colleges/', { page_size: 100, is_active: true });
+  }
+
+  /** The departments of the college (a head of department sees only their own). */
+  departments(): Observable<Page<Department>> {
+    return this.api.get<Page<Department>>('/academics/departments/', {
+      page_size: 100,
+      is_active: true,
+    });
   }
 
   /** The programs of the college (BSc Computer Science ...). */

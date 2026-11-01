@@ -10,8 +10,9 @@ import {
   switchMap,
   tap,
 } from 'rxjs';
-import { College, TeacherProfile } from 'src/app/api/models';
+import { College, Department, TeacherProfile } from 'src/app/api/models';
 import { DirectoryService, TeachersService } from 'src/app/api/services';
+import { AppPermission } from 'src/app/auth/enums';
 import { AuthService } from 'src/app/auth/services';
 import { GlobalException } from 'src/app/core/exceptions';
 import { ToastService } from 'src/app/core/services';
@@ -45,6 +46,8 @@ export class TeachersComponent implements OnInit, OnDestroy {
   showPassword = false;
   /** Only a platform administrator chooses the college; a college administrator's own is used. */
   colleges: College[] = [];
+  /** The departments to choose from (administrators only). */
+  departments: Department[] = [];
 
   private readonly reload$ = new Subject<void>();
   private readonly subscription = new Subscription();
@@ -64,6 +67,8 @@ export class TeachersComponent implements OnInit, OnDestroy {
       password: ['', [Validators.required, Validators.minLength(8)]],
       email: ['', [Validators.email]],
       college: [null as number | null],
+      department: [null as number | null],
+      is_head: [false],
       employee_id: ['', [Validators.required]],
       phone: [''],
       date_of_joining: [''],
@@ -128,6 +133,29 @@ export class TeachersComponent implements OnInit, OnDestroy {
     return !this.auth.user?.college;
   }
 
+  /**
+   * Administrators say which department a teacher is in and who heads it. A head of department
+   * adds teachers to their own department only, and cannot change either.
+   */
+  get canAssignDepartment(): boolean {
+    return this.auth.isAuthorizedNow({ permissions: [AppPermission.TEACHERS_DEPARTMENT_MANAGE] });
+  }
+
+  /** The head of department of the chosen department, when it is not the teacher being edited. */
+  get otherHead(): string {
+    const id = this.form.getRawValue().department as number | null;
+    const department = this.departments.find((item) => item.id === id);
+
+    if (!department || !department.head || department.head === this.editing?.id) return '';
+    return department.head_name;
+  }
+
+  /** The departments of the college the teacher is in (a platform administrator picks the college first). */
+  get departmentChoices(): Department[] {
+    const college = this.form.getRawValue().college as number | null;
+    return college ? this.departments.filter((item) => item.college === college) : this.departments;
+  }
+
   clearFilters(): void {
     this.filters.reset({ search: '', status: '' });
   }
@@ -155,6 +183,8 @@ export class TeachersComponent implements OnInit, OnDestroy {
       password: '',
       email: '',
       college: this.auth.user?.college?.id ?? null,
+      department: null,
+      is_head: false,
       employee_id: '',
       phone: '',
       date_of_joining: '',
@@ -166,6 +196,7 @@ export class TeachersComponent implements OnInit, OnDestroy {
     if (this.mustChooseCollege && this.colleges.length === 0) {
       this.directory.colleges().subscribe((page) => (this.colleges = page.results));
     }
+    this.loadDepartments();
   }
 
   openEdit(teacher: TeacherProfile): void {
@@ -178,6 +209,8 @@ export class TeachersComponent implements OnInit, OnDestroy {
       password: '',
       email: teacher.email,
       college: teacher.college,
+      department: teacher.department,
+      is_head: teacher.is_head,
       employee_id: teacher.employee_id,
       phone: teacher.phone,
       date_of_joining: teacher.date_of_joining ?? '',
@@ -185,6 +218,7 @@ export class TeachersComponent implements OnInit, OnDestroy {
     });
     this.setCreateOnlyFields(false);
     this.showForm = true;
+    this.loadDepartments();
   }
 
   /** Escape closes the dialog. */
@@ -221,8 +255,14 @@ export class TeachersComponent implements OnInit, OnDestroy {
       is_active: value.is_active,
     };
 
+    // Department and headship are for administrators; for a head of department the server uses
+    // their own department and ignores both, so they are not sent.
+    const structure = this.canAssignDepartment
+      ? { department: value.department, is_head: !!value.department && !!value.is_head }
+      : {};
+
     const request = this.editing
-      ? this.teachersApi.update(this.editing.public_id, details)
+      ? this.teachersApi.update(this.editing.public_id, { ...details, ...structure })
       : this.teachersApi.create({
           ...details,
           username: value.username.trim(),
@@ -230,6 +270,7 @@ export class TeachersComponent implements OnInit, OnDestroy {
           password: value.password,
           email: value.email.trim(),
           college: value.college,
+          ...(this.canAssignDepartment ? { department: value.department } : {}),
         });
 
     this.saving = true;
@@ -250,6 +291,13 @@ export class TeachersComponent implements OnInit, OnDestroy {
   }
 
   // ---- Helpers ---------------------------------------------------------------------
+
+  /** Administrators choose the department from the college's list. */
+  private loadDepartments(): void {
+    if (!this.canAssignDepartment || this.departments.length > 0) return;
+
+    this.directory.departments().subscribe((page) => (this.departments = page.results));
+  }
 
   /** The login fields and the college are chosen once, when the teacher is created. */
   private setCreateOnlyFields(creating: boolean): void {

@@ -1,4 +1,5 @@
 import { ListQuery } from 'src/app/api/models';
+import { AppPermission } from 'src/app/auth/enums';
 
 /**
  * What the academic setup page shows for each resource (docs/FRONTEND_PAGES.md, A10).
@@ -103,6 +104,11 @@ export interface ResourceConfig {
   fields: FieldConfig[];
   /** True for colleges and academic years: only a platform administrator can change them. */
   platformOnly?: boolean;
+  /**
+   * The permission that adds and edits rows when it is not the usual ACADEMICS_MANAGE: the departments
+   * are for administrators, while a head of department manages the rest of their own department.
+   */
+  managePermission?: AppPermission;
   emptyHint: string;
   /** Leave out the Active / Inactive column (the academic year already shows "Current"). */
   hideStatus?: boolean;
@@ -133,9 +139,12 @@ export const RESOURCES: ResourceConfig[] = [
     resource: 'departments',
     searchPlaceholder: 'Search name or code',
     emptyHint: 'Add a department, then its programs.',
+    managePermission: AppPermission.ACADEMICS_DEPARTMENTS_MANAGE,
     columns: [
       { header: 'Department', value: (row) => row.name },
       { header: 'Code', value: (row) => row.code },
+      // Chosen on the teacher (Teachers, "Head of department"), so only shown here.
+      { header: 'Head', value: (row) => row.head_name || '-' },
       { header: 'Description', value: (row) => row.description || '-' },
     ],
     filters: [

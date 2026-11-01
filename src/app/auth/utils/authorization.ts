@@ -20,7 +20,8 @@ export function resolveUserType(user: CurrentUser | null): UserType | null {
     case 'ADMIN':
       return UserType.ADMIN;
     case 'TEACHER':
-      return UserType.TEACHER;
+      // A teacher who heads a department is a head of department (HOD).
+      return user.hod_department ? UserType.HOD : UserType.TEACHER;
     case 'STUDENT':
       return UserType.STUDENT;
     default:

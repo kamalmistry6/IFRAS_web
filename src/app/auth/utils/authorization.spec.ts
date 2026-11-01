@@ -1,4 +1,4 @@
-import { AppPermission, UserType } from '../enums';
+import { AppPermission, ROLE_PERMISSIONS, UserType } from '../enums';
 import { CurrentUser } from '../models';
 import { hasPermission, isAuthorized, resolveUserType } from './authorization';
 
@@ -13,6 +13,7 @@ function user(overrides: Partial<CurrentUser>): CurrentUser {
     is_super_admin: false,
     college: null,
     must_change_password: false,
+    hod_department: null,
     student_profile_public_id: null,
     teacher_profile_public_id: null,
     ...overrides,
@@ -26,6 +27,27 @@ describe('resolveUserType', () => {
     expect(resolveUserType(user({ role: 'STUDENT' }))).toBe(UserType.STUDENT);
     expect(resolveUserType(user({ role: 'SUPER_ADMIN', is_super_admin: true }))).toBe(
       UserType.SUPER_ADMIN,
+    );
+  });
+
+  it('makes a teacher who heads a department a head of department', () => {
+    const head = user({
+      role: 'TEACHER',
+      hod_department: { id: 3, name: 'Information Technology' },
+    });
+
+    expect(resolveUserType(head)).toBe(UserType.HOD);
+    expect(resolveUserType(user({ role: 'TEACHER', hod_department: null }))).toBe(UserType.TEACHER);
+  });
+
+  it('only a teacher can be a head of department', () => {
+    const department = { id: 3, name: 'IT' };
+
+    expect(resolveUserType(user({ role: 'ADMIN', hod_department: department }))).toBe(
+      UserType.ADMIN,
+    );
+    expect(resolveUserType(user({ role: 'STUDENT', hod_department: department }))).toBe(
+      UserType.STUDENT,
     );
   });
 
@@ -59,6 +81,74 @@ describe('hasPermission', () => {
 
   it('gives a signed-out visitor nothing', () => {
     expect(hasPermission(null, AppPermission.PASSWORD_CHANGE)).toBe(false);
+  });
+});
+
+describe('a head of department', () => {
+  const can = (permission: AppPermission) => hasPermission(UserType.HOD, permission);
+
+  it('manages the department like an administrator', () => {
+    for (const permission of [
+      AppPermission.DASHBOARD_VIEW,
+      AppPermission.ACADEMICS_MANAGE,
+      AppPermission.TEACHERS_MANAGE,
+      AppPermission.ASSIGNMENTS_MANAGE,
+      AppPermission.TIMETABLE_MANAGE,
+      AppPermission.ATTENDANCE_CORRECT_ANY_TIME,
+      AppPermission.REPORTS_VIEW,
+      AppPermission.REPORTS_DEFAULTERS,
+    ]) {
+      expect(can(permission)).toBe(true);
+    }
+  });
+
+  it('only looks at students and enrollments', () => {
+    expect(can(AppPermission.STUDENTS_VIEW)).toBe(true);
+    expect(can(AppPermission.ENROLLMENTS_VIEW)).toBe(true);
+    expect(can(AppPermission.STUDENTS_MANAGE)).toBe(false);
+    expect(can(AppPermission.ENROLLMENTS_MANAGE)).toBe(false);
+  });
+
+  it('cannot change the departments, who heads them, or what is shared by colleges', () => {
+    expect(can(AppPermission.ACADEMICS_DEPARTMENTS_MANAGE)).toBe(false);
+    expect(can(AppPermission.TEACHERS_DEPARTMENT_MANAGE)).toBe(false);
+    expect(can(AppPermission.ACADEMICS_PLATFORM_MANAGE)).toBe(false);
+  });
+
+  it('is still a teacher: own lectures, own profile and password', () => {
+    for (const permission of [
+      AppPermission.LECTURES_TODAY,
+      AppPermission.MY_ASSIGNMENTS_VIEW,
+      AppPermission.ATTENDANCE_TAKE,
+      AppPermission.TEACHER_PROFILE_EDIT,
+      AppPermission.PASSWORD_CHANGE,
+    ]) {
+      expect(can(permission)).toBe(true);
+    }
+    expect(can(AppPermission.MY_ATTENDANCE_VIEW)).toBe(false);
+  });
+
+  it('holds every permission a plain teacher holds', () => {
+    for (const permission of ROLE_PERMISSIONS[UserType.TEACHER]) {
+      expect(can(permission)).toBe(true);
+    }
+  });
+
+  it('administrators alone put teachers in departments and name the head', () => {
+    for (const type of [UserType.ADMIN, UserType.SUPER_ADMIN]) {
+      expect(hasPermission(type, AppPermission.TEACHERS_DEPARTMENT_MANAGE)).toBe(true);
+      expect(hasPermission(type, AppPermission.ACADEMICS_DEPARTMENTS_MANAGE)).toBe(true);
+    }
+    expect(hasPermission(UserType.TEACHER, AppPermission.TEACHERS_DEPARTMENT_MANAGE)).toBe(false);
+    expect(hasPermission(UserType.STUDENT, AppPermission.DASHBOARD_VIEW)).toBe(false);
+    expect(hasPermission(UserType.TEACHER, AppPermission.DASHBOARD_VIEW)).toBe(false);
+  });
+
+  it('sees the admin screens through the rule of their user type', () => {
+    expect(isAuthorized(UserType.HOD, { roles: [UserType.ADMIN, UserType.HOD] })).toBe(true);
+    expect(isAuthorized(UserType.HOD, { roles: [UserType.ADMIN, UserType.SUPER_ADMIN] })).toBe(
+      false,
+    );
   });
 });
 

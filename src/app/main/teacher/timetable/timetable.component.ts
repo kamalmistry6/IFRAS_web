@@ -44,7 +44,8 @@ export class TimetableComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    this.attendance.timetable().subscribe({
+    // `scope: 'own'`: a head of department's own teaching, not the whole department's.
+    this.attendance.timetable({ is_active: true, scope: 'own' }).subscribe({
       next: (page) => {
         this.slots = page.results;
         this.loading = false;

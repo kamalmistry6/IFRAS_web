@@ -19,6 +19,9 @@ const teacher = (overrides: Partial<TeacherProfile> = {}): TeacherProfile =>
     full_name: 'Amit Patil',
     email: 'amit@college.edu',
     college: 1,
+    department: null,
+    department_name: '',
+    is_head: false,
     employee_id: 'EMP001',
     phone: '98470 11223',
     date_of_joining: '2024-06-10',
@@ -42,6 +45,7 @@ describe('TeachersComponent', () => {
     rows: TeacherProfile[] = [teacher()],
     count?: number,
     college: object | null = { id: 1 },
+    assignDepartments = true,
   ) {
     api = {
       list: vi.fn().mockReturnValue(of(page(rows, count))),
@@ -50,6 +54,15 @@ describe('TeachersComponent', () => {
     };
     directory = {
       colleges: vi.fn().mockReturnValue(of(page([{ id: 5, name: 'College Five' }]))),
+      departments: vi.fn().mockReturnValue(
+        of(
+          page([
+            { id: 7, college: 1, name: 'Information Technology', head: 4, head_name: 'Dev Shah' },
+            { id: 8, college: 1, name: 'Computer Science', head: null, head_name: '' },
+            { id: 9, college: 5, name: 'Physics', head: null, head_name: '' },
+          ]),
+        ),
+      ),
     };
     toast = { success: vi.fn(), error: vi.fn() };
 
@@ -60,7 +73,10 @@ describe('TeachersComponent', () => {
         { provide: TeachersService, useValue: api },
         { provide: DirectoryService, useValue: directory },
         { provide: ToastService, useValue: toast },
-        { provide: AuthService, useValue: { user: { college } } },
+        {
+          provide: AuthService,
+          useValue: { user: { college }, isAuthorizedNow: () => assignDepartments },
+        },
       ],
     });
 
@@ -172,6 +188,7 @@ describe('TeachersComponent', () => {
         password: ' Secret#123 ',
         email: 'riya@college.edu',
         college: 1,
+        department: null,
         employee_id: 'EMP009',
         phone: '99999 00000',
         date_of_joining: '2026-08-01',
@@ -225,6 +242,172 @@ describe('TeachersComponent', () => {
     });
   });
 
+  describe('departments and the head of department', () => {
+    it("shows each teacher's department and who is the head", () => {
+      const { element } = create([
+        teacher({ department: 7, department_name: 'Information Technology', is_head: true }),
+        teacher({ id: 2, public_id: 't-2', department: 8, department_name: 'Computer Science' }),
+        teacher({ id: 3, public_id: 't-3' }),
+      ]);
+      const rows = [...element.querySelectorAll('tbody tr')];
+
+      expect(rows[0].textContent).toContain('Information Technology');
+      expect(rows[0].querySelector('.badge-primary')?.textContent).toContain('Head');
+      expect(rows[1].textContent).toContain('Computer Science');
+      expect(rows[1].querySelector('.badge-primary')).toBeNull();
+      expect(rows[2].children[1].textContent?.trim()).toBe('-');
+    });
+
+    it('lets an administrator choose the department of a new teacher', () => {
+      const { component, element, fixture } = create();
+
+      component.openAdd();
+      fixture.detectChanges();
+
+      expect(directory['departments']).toHaveBeenCalledTimes(1);
+      const options = [...element.querySelectorAll('#t-department option')].map((option) =>
+        option.textContent?.trim(),
+      );
+      // only the departments of the teacher's college (7 and 8, not the other college's 9)
+      expect(options).toEqual(['No department', 'Information Technology', 'Computer Science']);
+    });
+
+    it('sends the department of a new teacher', () => {
+      const { component } = create();
+      component.openAdd();
+      component.form.patchValue({
+        first_name: 'Riya',
+        last_name: 'Shah',
+        username: 'riya',
+        password: 'Secret#123',
+        employee_id: 'E9',
+        department: 8,
+      });
+
+      component.save();
+
+      expect(api['create']).toHaveBeenCalledWith(expect.objectContaining({ department: 8 }));
+    });
+
+    it('offers the head box only once a department is chosen', () => {
+      const { component, element, fixture } = create();
+      component.openEdit(teacher());
+      fixture.detectChanges();
+      expect(element.querySelector('#t-department')).not.toBeNull();
+      expect(element.textContent).not.toContain('Head of department');
+
+      component.form.patchValue({ department: 8 });
+      fixture.detectChanges();
+
+      expect(element.textContent).toContain('Head of department');
+    });
+
+    it('warns that a new head replaces the current one', () => {
+      const { component, element, fixture } = create();
+      component.openEdit(teacher());
+      component.form.patchValue({ department: 7, is_head: true });
+      fixture.detectChanges();
+
+      expect(component.otherHead).toBe('Dev Shah');
+      expect(element.textContent).toContain('This replaces the current head, Dev Shah.');
+    });
+
+    it('does not warn when the teacher is already the head, or the department has none', () => {
+      const { component } = create();
+      component.openEdit(teacher({ id: 4, department: 7, is_head: true }));
+      expect(component.otherHead).toBe('');
+
+      component.form.patchValue({ department: 8 });
+      expect(component.otherHead).toBe('');
+    });
+
+    it('sends the department and the headship when an administrator edits a teacher', () => {
+      const { component } = create();
+      component.openEdit(teacher());
+      component.form.patchValue({ department: 8, is_head: true });
+
+      component.save();
+
+      expect(api['update']).toHaveBeenCalledWith(
+        't-1',
+        expect.objectContaining({ department: 8, is_head: true }),
+      );
+    });
+
+    it('never makes someone head of no department', () => {
+      const { component } = create();
+      component.openEdit(teacher({ is_head: true, department: 7 }));
+      component.form.patchValue({ department: null });
+
+      component.save();
+
+      expect(api['update']).toHaveBeenCalledWith(
+        't-1',
+        expect.objectContaining({ department: null, is_head: false }),
+      );
+    });
+
+    it('puts a server message about the headship next to its box', () => {
+      const { component, fixture, element } = create();
+      api['update'].mockReturnValue(
+        throwError(
+          () =>
+            new GlobalException({
+              status: 400,
+              message: 'x',
+              fieldErrors: { is_head: ['A head of department must be an active teacher.'] },
+            }),
+        ),
+      );
+      component.openEdit(teacher({ department: 7 }));
+      component.form.patchValue({ is_head: true });
+      // The box is on screen before the save, as it is for a person (a control revalidates when it appears).
+      fixture.detectChanges();
+
+      component.save();
+      fixture.detectChanges();
+
+      expect(element.textContent).toContain('A head of department must be an active teacher.');
+    });
+
+    describe('for a head of department', () => {
+      it('adds teachers to their own department: no choice, and nothing sent', () => {
+        const { component, element, fixture } = create([teacher()], undefined, { id: 1 }, false);
+        component.openAdd();
+        fixture.detectChanges();
+
+        expect(element.querySelector('#t-department')).toBeNull();
+        expect(element.textContent).toContain('The teacher is added to your department.');
+        expect(directory['departments']).not.toHaveBeenCalled();
+
+        component.form.patchValue({
+          first_name: 'Riya',
+          last_name: 'Shah',
+          username: 'riya',
+          password: 'Secret#123',
+          employee_id: 'E9',
+        });
+        component.save();
+
+        const sent = api['create'].mock.calls[0][0];
+        expect('department' in sent).toBe(false);
+      });
+
+      it('cannot change the department or the headship of a teacher', () => {
+        const { component, element, fixture } = create([teacher()], undefined, { id: 1 }, false);
+        component.openEdit(teacher({ department: 7, is_head: false }));
+        fixture.detectChanges();
+        expect(element.querySelector('#t-department')).toBeNull();
+
+        component.save();
+
+        const sent = api['update'].mock.calls[0][1];
+        expect('department' in sent).toBe(false);
+        expect('is_head' in sent).toBe(false);
+      });
+    });
+  });
+
   describe('editing a teacher', () => {
     it('fills the form and shows the username and email as fixed', () => {
       const { component, element, fixture } = create();
@@ -264,6 +447,8 @@ describe('TeachersComponent', () => {
         phone: '11111',
         date_of_joining: '2024-06-10',
         is_active: false,
+        department: null,
+        is_head: false,
       });
       expect(toast.success).toHaveBeenCalledWith('Teacher updated');
     });

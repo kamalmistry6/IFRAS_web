@@ -23,6 +23,8 @@ export interface CurrentUser {
   college: CollegeSummary | null;
   /** true until a new student or teacher replaces the password an administrator gave them. */
   must_change_password: boolean;
+  /** The department this user is the head of (HOD), or null. A head is still a teacher. */
+  hod_department: { id: number; name: string } | null;
   student_profile_public_id: string | null;
   teacher_profile_public_id: string | null;
 }

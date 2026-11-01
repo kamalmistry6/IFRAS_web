@@ -1,19 +1,27 @@
 <header class="page-banner">
   <div>
     <h1>Students</h1>
-    <p>Find a student, open their profile and enrollments, or add a new one.</p>
+    <p>
+      {{
+        canManage
+          ? 'Find a student, open their profile and enrollments, or add a new one.'
+          : 'The students enrolled in your department. The college administrator adds and enrols students.'
+      }}
+    </p>
   </div>
 
-  <div class="row">
-    <button class="btn btn-secondary" type="button" (click)="openImport()">
-      <span class="icon icon-upload icon-sm"></span>
-      Import students
-    </button>
-    <button class="btn btn-secondary" type="button" (click)="openAdd()">
-      <span class="icon icon-plus icon-sm"></span>
-      Add student
-    </button>
-  </div>
+  @if (canManage) {
+    <div class="row">
+      <button class="btn btn-secondary" type="button" (click)="openImport()">
+        <span class="icon icon-upload icon-sm"></span>
+        Import students
+      </button>
+      <button class="btn btn-secondary" type="button" (click)="openAdd()">
+        <span class="icon icon-plus icon-sm"></span>
+        Add student
+      </button>
+    </div>
+  }
 </header>
 
 <section class="card filters" [formGroup]="filters">
@@ -88,10 +96,12 @@
         {{
           hasFilters
             ? 'Try another search or clear the filters.'
-            : 'Add your first student to get started.'
+            : canManage
+              ? 'Add your first student to get started.'
+              : 'Students appear here once they are enrolled in a program of your department.'
         }}
       </p>
-      @if (!hasFilters) {
+      @if (!hasFilters && canManage) {
         <button class="btn btn-primary" type="button" (click)="openAdd()">Add student</button>
       }
     </div>

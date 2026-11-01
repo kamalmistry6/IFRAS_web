@@ -1,0 +1,318 @@
+<header class="page-banner">
+  <div>
+    <h1>Dashboard</h1>
+    <p>
+      @if (data) {
+        {{ scopeText }}{{ data.academic_year ? ' · ' + data.academic_year.name : '' }}
+      } @else {
+        Today at a glance.
+      }
+    </p>
+  </div>
+  <div class="month-box">
+    <label class="form-label" for="dash-month">Month</label>
+    <input
+      id="dash-month"
+      class="input"
+      type="month"
+      [formControl]="month"
+      (change)="changeMonth()"
+    />
+    @if (month.value) {
+      <button class="btn btn-secondary btn-sm" type="button" (click)="clearMonth()">
+        This month
+      </button>
+    }
+  </div>
+</header>
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    <span>{{ error }}</span>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="load()">Try again</button>
+  </div>
+}
+
+@if (data; as d) {
+  <div [class.loading]="loading">
+    <section class="tiles" aria-label="Totals">
+      <a class="card tile tone-primary" routerLink="/admin/teachers">
+        <span class="chip"><span class="icon icon-user icon-lg"></span></span>
+        <span class="label">Teachers</span>
+        <strong>{{ d.counts.teachers }}</strong>
+      </a>
+      <a class="card tile tone-info" routerLink="/admin/students">
+        <span class="chip"><span class="icon icon-users icon-lg"></span></span>
+        <span class="label">Students</span>
+        <strong>{{ d.counts.students }}</strong>
+      </a>
+      <a class="card tile tone-success" routerLink="/admin/academics">
+        <span class="chip"><span class="icon icon-book icon-lg"></span></span>
+        <span class="label">Programs</span>
+        <strong>{{ d.counts.programs }}</strong>
+      </a>
+      <a class="card tile tone-warning" routerLink="/admin/assignments">
+        <span class="chip"><span class="icon icon-list icon-lg"></span></span>
+        <span class="label">Subjects offered</span>
+        <strong>{{ d.counts.subjects_offered }}</strong>
+      </a>
+    </section>
+
+    <div class="grid main">
+      <section class="card panel">
+        <header>
+          <div>
+            <h2>Attendance by day</h2>
+            <p class="text-subtle">{{ d.month.from | date: 'MMMM y' }}</p>
+          </div>
+          <ul class="legend" aria-label="Legend">
+            <li><span class="key line"></span>Attendance</li>
+            <li><span class="key dash"></span>{{ d.attendance.limit }}% limit</li>
+          </ul>
+        </header>
+
+        @if (trendChart) {
+          <app-chart
+            class="chart-trend"
+            [config]="trendChart"
+            label="Attendance percentage for each day of the month"
+          ></app-chart>
+        } @else {
+          <div class="empty">No lecture has been submitted in this month yet.</div>
+        }
+      </section>
+
+      <section class="card panel ring-panel">
+        <header>
+          <h2>
+            Attendance {{ month.value ? 'in ' + (d.month.from | date: 'MMMM') : 'this month' }}
+          </h2>
+          <a routerLink="/admin/reports">Reports</a>
+        </header>
+
+        @if (ringChart) {
+          <div class="ring">
+            <app-chart [config]="ringChart" label="Attendance of the month"></app-chart>
+            <div class="center" [class.low]="low">
+              <strong> {{ d.attendance.percentage | number: '1.0-1' }}<small>%</small> </strong>
+              <span>
+                {{ d.attendance.lectures_held }}
+                {{ d.attendance.lectures_held === 1 ? 'lecture' : 'lectures' }}
+              </span>
+            </div>
+          </div>
+          <ul class="facts">
+            @if (change !== null) {
+              <li>
+                <span>Against the month before</span>
+                <strong [class.up]="change > 0" [class.down]="change < 0">
+                  {{ change > 0 ? '▲' : change < 0 ? '▼' : '=' }}
+                  {{ change < 0 ? -change : change }} pts
+                </strong>
+              </li>
+            }
+            <li>
+              <span>Students below {{ d.attendance.limit }}%</span>
+              <strong [class.down]="d.attendance.defaulters > 0">
+                {{ d.attendance.defaulters }}
+              </strong>
+            </li>
+          </ul>
+        } @else {
+          <div class="empty">No lecture has been submitted in this month yet.</div>
+        }
+      </section>
+    </div>
+
+    <div class="grid halves">
+      <section class="card panel today-panel">
+        <header>
+          <h2>Today's lectures</h2>
+          <a routerLink="/admin/sessions">Sessions</a>
+        </header>
+
+        @if (todayChart) {
+          <div class="today">
+            <div class="donut">
+              <app-chart [config]="todayChart" label="Today's lectures by state"></app-chart>
+              <div class="center">
+                <strong>{{ d.today.total }}</strong>
+                <span>{{ d.today.total === 1 ? 'lecture' : 'lectures' }}</span>
+              </div>
+            </div>
+            <ul class="states">
+              @for (slice of slices; track slice.key) {
+                <li>
+                  <span class="dot" [style.background]="'var(--color-' + slice.color + ')'"></span>
+                  <span class="name">{{ slice.label }}</span>
+                  <strong>{{ d.today[slice.key] }}</strong>
+                </li>
+              }
+            </ul>
+          </div>
+        } @else {
+          <div class="empty">No lectures are scheduled for today.</div>
+        }
+      </section>
+
+      <section class="card panel lowest">
+        <header>
+          <div>
+            <h2>Lowest attendance by subject</h2>
+            <p class="text-subtle">Amber is under {{ d.attendance.limit }}%</p>
+          </div>
+          <a routerLink="/admin/reports">Reports</a>
+        </header>
+
+        @if (subjectsChart) {
+          <app-chart
+            [config]="subjectsChart"
+            [style.height]="subjectsHeight"
+            label="The subjects with the lowest attendance"
+          ></app-chart>
+        } @else {
+          <div class="empty">No lecture has been submitted in this month yet.</div>
+        }
+      </section>
+    </div>
+
+    <div class="grid halves">
+      <section class="card panel attention">
+        <header>
+          <h2>Needs attention today</h2>
+          @if (d.needs_attention.count > 0) {
+            <span class="count warn">{{ d.needs_attention.count }}</span>
+          }
+        </header>
+
+        @if (d.needs_attention.count === 0) {
+          <div class="empty good">Every lecture that is over has been closed.</div>
+        } @else {
+          <ul class="rows">
+            @for (lecture of d.needs_attention.lectures; track $index) {
+              <li>
+                <button
+                  class="row-link"
+                  type="button"
+                  [disabled]="!lecture.session_public_id"
+                  (click)="openLecture(lecture)"
+                >
+                  <span class="avatar">{{ initials(lecture.teacher_name) }}</span>
+                  <span class="grow">
+                    <span class="subject">{{ lecture.subject_name }}</span>
+                    <small class="text-subtle">
+                      {{ lecture.teacher_name }} · {{ formatTime(lecture.start_time) }} -
+                      {{ formatTime(lecture.end_time) }}
+                    </small>
+                  </span>
+                  <span class="badge" [ngClass]="stateBadge[lecture.state]">
+                    {{ stateLabel[lecture.state] }}
+                  </span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section class="card panel behind">
+        <header>
+          <div>
+            <h2>Teachers behind</h2>
+            <p class="text-subtle">
+              Lectures not submitted in the last {{ d.unsubmitted_teachers.days }} days
+            </p>
+          </div>
+          @if (d.unsubmitted_teachers.count > 0) {
+            <span class="count warn">{{ d.unsubmitted_teachers.count }}</span>
+          }
+        </header>
+
+        @if (d.unsubmitted_teachers.count === 0) {
+          <div class="empty good">No teacher has an unsubmitted lecture.</div>
+        } @else {
+          <ul class="rows">
+            @for (teacher of d.unsubmitted_teachers.teachers; track teacher.teacher_name) {
+              <li class="plain-row">
+                <span class="avatar">{{ initials(teacher.teacher_name) }}</span>
+                <span class="grow">
+                  <span class="subject">{{ teacher.teacher_name }}</span>
+                  <small class="text-subtle">since {{ teacher.oldest | date: 'EEE, d MMM' }}</small>
+                </span>
+                <span class="badge badge-warning">
+                  {{ teacher.lectures }} {{ teacher.lectures === 1 ? 'lecture' : 'lectures' }}
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+
+    <section class="card list">
+      <header class="head">
+        <h2>Latest sessions</h2>
+      </header>
+
+      @if (d.recent_sessions.length === 0) {
+        <div class="empty-state">
+          <span class="icon icon-clipboard icon-xl"></span>
+          <h3>No sessions yet</h3>
+          <p>Lectures taken by your teachers appear here.</p>
+        </div>
+      } @else {
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Subject</th>
+                <th>Teacher</th>
+                <th>Status</th>
+                <th>Present</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (session of d.recent_sessions; track session.public_id) {
+                <tr
+                  class="clickable"
+                  tabindex="0"
+                  (click)="open(session)"
+                  (keydown.enter)="open(session)"
+                >
+                  <td class="nowrap">{{ session.date | date: 'EEE, d MMM y' }}</td>
+                  <td class="nowrap">
+                    {{ formatTime(session.start_time) }} - {{ formatTime(session.end_time) }}
+                  </td>
+                  <td>
+                    <span class="subject">{{ session.subject_name }}</span>
+                    <small class="text-subtle">{{ session.subject_code }}</small>
+                  </td>
+                  <td>{{ session.teacher_name }}</td>
+                  <td>
+                    <span class="badge" [ngClass]="stateBadge[session.status]">
+                      {{ stateLabel[session.status] }}
+                    </span>
+                  </td>
+                  <td class="nowrap">
+                    @if (session.status === 'CANCELLED') {
+                      <span class="text-subtle">-</span>
+                    } @else {
+                      <span class="bar">
+                        <span class="fill" [style.width.%]="percent(session)"></span>
+                      </span>
+                      {{ session.present_count }} / {{ session.total_students }} ({{
+                        percent(session)
+                      }}%)
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  </div>
+}

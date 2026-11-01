@@ -62,7 +62,8 @@ export const NAV_ITEMS: NavItem[] = [
     label: 'Dashboard',
     route: '/admin/dashboard',
     icon: 'grid',
-    roles: [UserType.ADMIN, UserType.SUPER_ADMIN],
+    roles: [UserType.ADMIN, UserType.SUPER_ADMIN, UserType.HOD],
+    permissions: [AppPermission.DASHBOARD_VIEW],
   },
   {
     label: 'Academic setup',
@@ -90,14 +91,14 @@ export const NAV_ITEMS: NavItem[] = [
     route: '/admin/students',
     icon: 'users',
     roles: [UserType.ADMIN, UserType.SUPER_ADMIN],
-    permissions: [AppPermission.STUDENTS_MANAGE],
+    permissions: [AppPermission.STUDENTS_VIEW],
   },
   {
     label: 'Enrollments',
     route: '/admin/enrollments',
     icon: 'layers',
     roles: [UserType.ADMIN, UserType.SUPER_ADMIN],
-    permissions: [AppPermission.ENROLLMENTS_MANAGE],
+    permissions: [AppPermission.ENROLLMENTS_VIEW],
   },
   {
     label: 'Teachers',
@@ -119,6 +120,89 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'calendar',
     roles: [UserType.ADMIN, UserType.SUPER_ADMIN],
     permissions: [AppPermission.TIMETABLE_MANAGE],
+  },
+  // A head of department is a teacher who also manages their department, so the menu has two
+  // groups: their own teaching, and the department (the administrator's screens, limited by the
+  // server to the department).
+  {
+    label: 'My teaching',
+    icon: 'calendar',
+    roles: [UserType.HOD],
+    items: [
+      {
+        label: 'Today',
+        route: '/teacher/today',
+        icon: 'calendar',
+        permissions: [AppPermission.LECTURES_TODAY],
+      },
+      {
+        label: 'My timetable',
+        route: '/teacher/timetable',
+        icon: 'clock',
+        permissions: [AppPermission.TIMETABLE_VIEW],
+      },
+      {
+        label: 'My sessions',
+        route: '/teacher/sessions',
+        icon: 'clipboard',
+        permissions: [AppPermission.ATTENDANCE_SESSIONS_VIEW],
+      },
+    ],
+  },
+  {
+    label: 'Department',
+    icon: 'landmark',
+    roles: [UserType.HOD],
+    items: [
+      {
+        label: 'Teachers',
+        route: '/admin/teachers',
+        icon: 'user',
+        permissions: [AppPermission.TEACHERS_MANAGE],
+      },
+      {
+        label: 'Assignments',
+        route: '/admin/assignments',
+        icon: 'list',
+        permissions: [AppPermission.ASSIGNMENTS_MANAGE],
+      },
+      {
+        label: 'Timetable',
+        route: '/admin/timetable',
+        icon: 'calendar',
+        permissions: [AppPermission.TIMETABLE_MANAGE],
+      },
+      {
+        label: 'Sessions',
+        route: '/admin/sessions',
+        icon: 'clipboard',
+        permissions: [AppPermission.ATTENDANCE_SESSIONS_VIEW],
+      },
+      {
+        label: 'Students',
+        route: '/admin/students',
+        icon: 'users',
+        permissions: [AppPermission.STUDENTS_VIEW],
+      },
+      {
+        label: 'Enrollments',
+        route: '/admin/enrollments',
+        icon: 'layers',
+        permissions: [AppPermission.ENROLLMENTS_VIEW],
+      },
+      {
+        label: 'Academic setup',
+        route: '/admin/academics',
+        icon: 'book',
+        permissions: [AppPermission.ACADEMICS_VIEW],
+      },
+      {
+        label: 'Reports',
+        route: '/admin/reports',
+        icon: 'bar-chart',
+        permissions: [AppPermission.REPORTS_VIEW],
+      },
+    ],
   },
   {
     label: 'My attendance',

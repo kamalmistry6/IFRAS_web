@@ -4,6 +4,8 @@ import { ActivatedRoute } from '@angular/router';
 import { switchMap, tap } from 'rxjs';
 import { EnrollmentStatus, StudentEnrollment, StudentProfile } from 'src/app/api/models';
 import { StudentsService } from 'src/app/api/services';
+import { AppPermission } from 'src/app/auth/enums';
+import { AuthService } from 'src/app/auth/services';
 import { GlobalException } from 'src/app/core/exceptions';
 import { ToastService } from 'src/app/core/services';
 import { applyServerErrors } from 'src/app/shared/utils';
@@ -47,10 +49,13 @@ export class StudentDetailComponent implements OnInit {
     fb: FormBuilder,
     private students: StudentsService,
     private toast: ToastService,
+    private auth: AuthService,
   ) {
     this.publicId = route.snapshot.paramMap.get('id') ?? '';
-    // Coming from "Add student": open the enrol dialog straight away.
-    this.enrolAtOnce = route.snapshot.queryParamMap.get('enrol') === '1';
+    // Coming from "Add student": open the enrol dialog straight away (if the user may enrol).
+    this.enrolAtOnce =
+      route.snapshot.queryParamMap.get('enrol') === '1' &&
+      auth.isAuthorizedNow({ permissions: [AppPermission.ENROLLMENTS_MANAGE] });
 
     this.form = fb.nonNullable.group({
       first_name: ['', [Validators.required]],
@@ -81,6 +86,8 @@ export class StudentDetailComponent implements OnInit {
             phone: student.phone,
             address: student.address,
           });
+          // A head of department only looks: the boxes cannot be edited.
+          if (!this.canManage) this.form.disable({ emitEvent: false });
         }),
         switchMap((student) => this.students.enrollments({ student: student.id, page_size: 100 })),
       )
@@ -96,6 +103,16 @@ export class StudentDetailComponent implements OnInit {
           this.error = error.isNotFound ? 'This student does not exist.' : error.message;
         },
       });
+  }
+
+  /** Administrators edit the profile; a head of department only looks. */
+  get canManage(): boolean {
+    return this.auth.isAuthorizedNow({ permissions: [AppPermission.STUDENTS_MANAGE] });
+  }
+
+  /** Administrators enrol the student and edit their enrollments. */
+  get canEnrol(): boolean {
+    return this.auth.isAuthorizedNow({ permissions: [AppPermission.ENROLLMENTS_MANAGE] });
   }
 
   /** The enrollments alone, after one was added or changed. */

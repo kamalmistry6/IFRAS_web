@@ -31,7 +31,9 @@ export class AcademicsComponent {
   canWrite(tab: ResourceConfig): boolean {
     return this.auth.isAuthorizedNow({
       permissions: [
-        tab.platformOnly ? AppPermission.ACADEMICS_PLATFORM_MANAGE : AppPermission.ACADEMICS_MANAGE,
+        tab.platformOnly
+          ? AppPermission.ACADEMICS_PLATFORM_MANAGE
+          : (tab.managePermission ?? AppPermission.ACADEMICS_MANAGE),
       ],
     });
   }

@@ -67,6 +67,15 @@
         <dd>{{ college?.name || '-' }}</dd>
       </div>
       <div>
+        <dt>Department</dt>
+        <dd>
+          {{ teacher.department_name || '-' }}
+          @if (teacher.is_head) {
+            <span class="badge badge-primary">Head of department</span>
+          }
+        </dd>
+      </div>
+      <div>
         <dt>Employee ID</dt>
         <dd>{{ teacher.employee_id || '-' }}</dd>
       </div>

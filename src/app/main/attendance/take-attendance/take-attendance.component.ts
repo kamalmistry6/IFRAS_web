@@ -168,8 +168,15 @@ export class TakeAttendanceComponent implements OnInit, OnDestroy {
     return (record.student_name[0] ?? '?').toUpperCase();
   }
 
-  /** Where Back goes when there is no history to go back to: a teacher's Today, an administrator's sessions. */
+  /**
+   * Where Back goes when there is no history to go back to: a teacher's Today, an administrator's
+   * sessions. A head of department can come from either, so the address they are on decides.
+   */
   get backLink(): string {
+    if (this.auth.userType === UserType.HOD) {
+      return this.location.path().startsWith('/teacher') ? '/teacher/today' : '/admin/sessions';
+    }
+
     return this.auth.userType === UserType.TEACHER ? '/teacher/today' : '/admin/sessions';
   }
 

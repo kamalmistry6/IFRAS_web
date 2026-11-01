@@ -28,9 +28,13 @@ import { ApiClient } from './api-client.service';
 export class AttendanceService {
   constructor(private api: ApiClient) {}
 
-  /** The lectures of a day (today when `date` is left out). `date` is YYYY-MM-DD. */
-  today(date?: string): Observable<TodayResponse> {
-    return this.api.get<TodayResponse>('/attendance/today/', { date });
+  /**
+   * The lectures of a day (today when `date` is left out). `date` is YYYY-MM-DD.
+   * A head of department also sees their department's lectures; `scope: 'own'` leaves those out, for
+   * their own "Today". It changes nothing for anyone else.
+   */
+  today(date?: string, scope?: 'own'): Observable<TodayResponse> {
+    return this.api.get<TodayResponse>('/attendance/today/', { date, scope });
   }
 
   /** Opens the attendance session of a timetable slot (or returns the one already open). */
@@ -81,9 +85,11 @@ export class AttendanceService {
   }
 
   /**
-   * Timetable slots: a teacher's own, or the whole college's for an administrator.
+   * Timetable slots: a teacher's own, or the whole college's for an administrator (a head of
+   * department: their department's, and their own).
    * Only active slots unless `is_active` is passed as false/omitted by the caller.
-   * Filters: is_active, day_of_week, teacher_assignment__teacher, teacher_assignment__subject_offering.
+   * Filters: is_active, day_of_week, teacher_assignment__teacher, teacher_assignment__subject_offering,
+   * and scope=own for the user's own teaching only.
    */
   timetable(query: ListQuery = { is_active: true }): Observable<Page<TimetableSlot>> {
     return this.api.get<Page<TimetableSlot>>('/attendance/timetable/', {

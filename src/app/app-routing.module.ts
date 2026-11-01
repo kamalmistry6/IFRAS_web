@@ -38,13 +38,13 @@ const routes: Routes = [
       {
         path: 'teacher',
         canMatch: [AuthMatchGuard],
-        data: { roles: [UserType.TEACHER] },
+        data: { roles: [UserType.TEACHER, UserType.HOD] },
         loadChildren: () => import('./main/teacher/teacher.module').then((m) => m.TeacherModule),
       },
       {
         path: 'admin',
         canMatch: [AuthMatchGuard],
-        data: { roles: [UserType.ADMIN, UserType.SUPER_ADMIN] },
+        data: { roles: [UserType.ADMIN, UserType.SUPER_ADMIN, UserType.HOD] },
         loadChildren: () => import('./main/admin/admin.module').then((m) => m.AdminModule),
       },
       {

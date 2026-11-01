@@ -77,25 +77,35 @@
         </div>
       </div>
 
-      <div class="card-footer">
-        <button
-          class="btn btn-primary"
-          type="submit"
-          [class.is-loading]="saving"
-          [disabled]="saving || form.pristine"
-        >
-          Save changes
-        </button>
-      </div>
+      @if (canManage) {
+        <div class="card-footer">
+          <button
+            class="btn btn-primary"
+            type="submit"
+            [class.is-loading]="saving"
+            [disabled]="saving || form.pristine"
+          >
+            Save changes
+          </button>
+        </div>
+      } @else {
+        <div class="card-footer">
+          <small class="text-subtle">
+            Only the college administrator changes a student's details.
+          </small>
+        </div>
+      }
     </form>
 
     <section class="card enrollments">
       <div class="card-header">
         <h3>Enrollments</h3>
-        <button class="btn btn-secondary btn-sm" type="button" (click)="openEnrol()">
-          <span class="icon icon-plus icon-sm"></span>
-          Enrol
-        </button>
+        @if (canEnrol) {
+          <button class="btn btn-secondary btn-sm" type="button" (click)="openEnrol()">
+            <span class="icon icon-plus icon-sm"></span>
+            Enrol
+          </button>
+        }
       </div>
 
       @if (enrollments.length === 0) {
@@ -117,9 +127,11 @@
               <span class="badge" [ngClass]="badge[item.status]">
                 {{ statusLabel[item.status] }}
               </span>
-              <button class="btn btn-secondary btn-sm" type="button" (click)="openEdit(item)">
-                Edit
-              </button>
+              @if (canEnrol) {
+                <button class="btn btn-secondary btn-sm" type="button" (click)="openEdit(item)">
+                  Edit
+                </button>
+              }
             </li>
           }
         </ul>

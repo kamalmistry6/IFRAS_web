@@ -45,6 +45,7 @@ describe('StudentsComponent', () => {
     rows: StudentProfile[] = [student()],
     count?: number,
     college: object | null = { id: 1 },
+    canManage = true,
   ) {
     api = {
       list: vi.fn().mockReturnValue(of(page(rows, count))),
@@ -64,7 +65,10 @@ describe('StudentsComponent', () => {
         { provide: StudentsService, useValue: api },
         { provide: DirectoryService, useValue: directory },
         { provide: ToastService, useValue: toast },
-        { provide: AuthService, useValue: { user: { college } } },
+        {
+          provide: AuthService,
+          useValue: { user: { college }, isAuthorizedNow: () => canManage },
+        },
       ],
     });
 
@@ -271,6 +275,35 @@ describe('StudentsComponent', () => {
       expect(navigate).not.toHaveBeenCalled();
     });
   });
+  describe('for a head of department, who only looks', () => {
+    it('does not offer to add or import students', () => {
+      const { element, component } = create([student()], undefined, null, false);
+
+      expect(component.canManage).toBe(false);
+      const buttons = [...element.querySelectorAll('.page-banner button')];
+      expect(buttons.length).toBe(0);
+      expect(element.querySelector('.page-banner')?.textContent).toContain(
+        'enrolled in your department',
+      );
+    });
+
+    it('still lists the students and opens one', () => {
+      const { element } = create([student()], undefined, null, false);
+
+      element.querySelector<HTMLElement>('tbody tr')!.click();
+
+      expect(element.querySelector('tbody')?.textContent).toContain('Rahul Sharma');
+      expect(navigate).toHaveBeenCalledWith(['/admin/students', 's-12']);
+    });
+
+    it('explains an empty list without an add button', () => {
+      const { element } = create([], 0, null, false);
+
+      expect(element.textContent).toContain('enrolled in a program of your department');
+      expect(element.querySelector('.empty-state button')).toBeNull();
+    });
+  });
+
   describe('importing students', () => {
     it('opens the import dialog from the banner and closes it again', () => {
       const { component, element, fixture } = create();

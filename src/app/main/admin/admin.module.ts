@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AppPermission } from 'src/app/auth/enums';
 import { AuthGuard } from 'src/app/auth/guards';
-import { ComingSoonComponent } from 'src/app/shared/components/coming-soon';
+import { ChartComponent } from 'src/app/shared/components/chart/chart.component';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { AssignmentsComponent } from './assignments/assignments.component';
 import { AcademicsComponent } from './academics/academics.component';
@@ -12,6 +12,7 @@ import { SessionsListComponent } from '../attendance/sessions-list/sessions-list
 import { TakeAttendanceComponent } from '../attendance/take-attendance/take-attendance.component';
 import { ReportsComponent } from '../reports/reports/reports.component';
 import { ReportsModule } from '../reports/reports.module';
+import { DashboardComponent } from './dashboard/dashboard.component';
 import { EnrollmentsComponent } from './enrollments/enrollments.component';
 import { EnrollmentDialogComponent } from './enrollment-dialog/enrollment-dialog.component';
 import { StudentDetailComponent } from './student-detail/student-detail.component';
@@ -33,12 +34,10 @@ const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   {
     path: 'dashboard',
-    component: ComingSoonComponent,
+    component: DashboardComponent,
     title: 'Dashboard',
-    data: {
-      description: 'Today at a glance: lectures, totals and recent sessions.',
-      apis: ['GET /attendance/today/', 'GET /attendance/sessions/?page_size=10'],
-    },
+    canActivate: [AuthGuard],
+    data: { permissions: [AppPermission.DASHBOARD_VIEW] },
   },
   {
     path: 'academics',
@@ -73,21 +72,21 @@ const routes: Routes = [
     component: StudentsComponent,
     title: 'Students',
     canActivate: [AuthGuard],
-    data: { permissions: [AppPermission.STUDENTS_MANAGE] },
+    data: { permissions: [AppPermission.STUDENTS_VIEW] },
   },
   {
     path: 'students/:id',
     component: StudentDetailComponent,
     title: 'Student',
     canActivate: [AuthGuard],
-    data: { permissions: [AppPermission.STUDENTS_MANAGE] },
+    data: { permissions: [AppPermission.STUDENTS_VIEW] },
   },
   {
     path: 'enrollments',
     component: EnrollmentsComponent,
     title: 'Enrollments',
     canActivate: [AuthGuard],
-    data: { permissions: [AppPermission.ENROLLMENTS_MANAGE] },
+    data: { permissions: [AppPermission.ENROLLMENTS_VIEW] },
   },
   {
     path: 'teachers',
@@ -114,6 +113,9 @@ const routes: Routes = [
 
 @NgModule({
   declarations: [
+    // Chart.js is only needed here, so it loads with the admin area and not with the login page.
+    ChartComponent,
+    DashboardComponent,
     AcademicsComponent,
     ResourceTableComponent,
     StudentsComponent,

@@ -1,6 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DefaultersReport, ListQuery, ReportFormat, SubjectAttendanceReport } from '../models';
+import {
+  DashboardSummary,
+  DefaultersReport,
+  ListQuery,
+  ReportFormat,
+  SubjectAttendanceReport,
+} from '../models';
 import { ApiClient } from './api-client.service';
 
 export type ReportName = 'subject-attendance' | 'defaulters';
@@ -25,6 +31,14 @@ export class ReportsService {
    */
   defaulters(query: ListQuery): Observable<DefaultersReport> {
     return this.api.get<DefaultersReport>('/reports/defaulters/', query);
+  }
+
+  /**
+   * The dashboard numbers for the user's scope: the college, everything, or the department.
+   * `month` (YYYY-MM) is for the attendance numbers; without it, this month.
+   */
+  dashboard(month?: string): Observable<DashboardSummary> {
+    return this.api.get<DashboardSummary>('/reports/dashboard/', month ? { month } : {});
   }
 
   /** The same report as a file. Send the same query as for the screen. */

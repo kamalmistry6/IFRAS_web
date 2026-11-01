@@ -53,6 +53,7 @@ export class TopbarComponent {
       case UserType.STUDENT:
         return '/student/profile';
       case UserType.TEACHER:
+      case UserType.HOD:
         return '/teacher/profile';
       default:
         return null;
